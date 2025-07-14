@@ -1,0 +1,63 @@
+* {
+    @apply m-0 box-border p-0 font-sans text-base outline-hidden select-none;
+}
+
+body {
+    @apply overflow-y-scroll;
+}
+
+hr {
+    @apply border border-gray-300;
+}
+
+a {
+    @apply cursor-pointer text-blue-700 underline;
+}
+
+form {
+    label {
+        @apply mt-3 table text-lg text-gray-700 select-none;
+    }
+}
+
+form label {
+    @apply mt-4 block text-sm font-medium text-gray-700;
+}
+
+input[type='text'],
+input[type='email'],
+input[type='password'] {
+    @apply focus-effect w-full rounded-full border border-gray-300 bg-white px-3 py-2 leading-tight text-gray-700 outline-hidden;
+}
+
+input[type='date'] {
+    @apply focus-effect rounded-sm border border-gray-300 bg-white pt-px pl-2 text-center outline-hidden;
+}
+
+textarea {
+    @apply focus-effect h-20 max-h-48 min-h-24 w-full rounded border border-gray-300 bg-white p-2 font-normal outline-hidden;
+}
+
+input[type='file'] {
+    @apply relative;
+
+    &::file-selector-button {
+        @apply block cursor-pointer rounded-md border border-gray-300 bg-white py-2 pr-2 pl-9 text-sky-600 transition duration-300 ease-in-out;
+    }
+
+    &::before {
+        @apply absolute z-10;
+        pointer-events: none;
+        top: 10px;
+        left: 14px;
+        height: 20px;
+        width: 20px;
+        content: '';
+        background-image: url("data:image/svg+xml, %3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 384 512'%3E%3Cpath fill='%230084d1' d='M64 0C28.7 0 0 28.7 0 64L0 448c0 35.3 28.7 64 64 64l256 0c35.3 0 64-28.7 64-64l0-288-128 0c-17.7 0-32-14.3-32-32L224 0 64 0zM256 0l0 128 128 0L256 0zM216 408c0 13.3-10.7 24-24 24s-24-10.7-24-24l0-102.1-31 31c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l72-72c9.4-9.4 24.6-9.4 33.9 0l72 72c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-31-31L216 408z'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+    }
+}
+
+input::file-selector-button:hover {
+    @apply bg-gray-100;
+}

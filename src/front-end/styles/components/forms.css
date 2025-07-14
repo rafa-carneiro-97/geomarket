@@ -1,0 +1,7 @@
+.field-error {
+    @apply table pl-1 text-sm text-red-600 italic;
+}
+
+.invalid-field {
+    @apply border border-red-600;
+}
