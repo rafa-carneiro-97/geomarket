@@ -74,7 +74,7 @@ Note that `(env)` will appear at the prompt. This indicates that the terminal is
 Install python dependencies:
 
 ```sh
-(env)$ pip install -r ./requirements/dev.txt
+pip install -r ./requirements-dev.txt
 ```
 
 Access the `\src\back-end` folder:
