@@ -1,2 +1,2 @@
--r default.txt
+-r requirements-default.txt
 gunicorn==23.0.0
