@@ -12,7 +12,8 @@
         "ms-python.python",
         "ms-python.vscode-pylance",
         "ms-python.black-formatter",
-        "christian-kohler.npm-intellisense"
+        "christian-kohler.npm-intellisense",
+        "pomdtr.excalidraw-editor"
     ],
     // List of extensions recommended by VS Code that should not be recommended for users of this workspace.
     "unwantedRecommendations": []
