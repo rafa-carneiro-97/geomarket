@@ -6,6 +6,7 @@ urlpatterns = [
     path("admin", admin.site.urls),
     path("", include("apps.core.urls")),
     path("", include("apps.users.urls")),
+    path("", include("apps.business.urls")),
     path("", include("apps.spa.urls")),  # this must be the last
 ]
 

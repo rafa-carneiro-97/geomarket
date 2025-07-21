@@ -9,7 +9,7 @@ from django.contrib.auth.models import PermissionsMixin, Group, Permission
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, password, **other_fields):
         email = self.normalize_email(email)
-        user = self.model(email=email, **other_fields)
+        user: User = self.model(email=email, **other_fields)
         user.set_password(password)
         user.save()
         return user
@@ -34,7 +34,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
 
     password = models.CharField(
-        verbose_name="Senha", max_length=128, blank=False, null=False
+        verbose_name="senha", max_length=128, blank=False, null=False
     )
 
     email = models.EmailField(
@@ -42,7 +42,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
 
     is_email_verified = models.BooleanField(
-        verbose_name="Email foi verificado",
+        verbose_name="email foi verificado",
         default=False,
         null=False,
     )
