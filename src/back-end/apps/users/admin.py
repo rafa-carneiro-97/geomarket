@@ -1,14 +1,13 @@
 from django.contrib import admin
-from django.contrib.auth import get_user_model, admin as auth_admin
-from django.contrib.auth.models import Group
-from . import models
-
+from django.contrib.auth import admin as auth_admin
+from django.contrib.auth.models import Group, Permission
+from . import models, forms
 
 admin.site.unregister(Group)
 
 
-@admin.register(models.CustomPermissionGroup)
-class CustomPermissionGroupAdmin(admin.ModelAdmin):
+@admin.register(models.CustomGroup)
+class CustomGroupAdmin(admin.ModelAdmin):
     pass
 
 
@@ -17,9 +16,9 @@ class CustomPermissionAdmin(admin.ModelAdmin):
     pass
 
 
-@admin.register(get_user_model())
+@admin.register(models.User)
 class UserAdmin(auth_admin.UserAdmin):
-    model = get_user_model()
+    form = forms.UserAdminForm
     list_display = (
         "id",
         "email",
@@ -43,7 +42,7 @@ class UserAdmin(auth_admin.UserAdmin):
         (
             "Identificação",
             {
-                "fields": ("photo", ("first_name", "last_name")),
+                "fields": (("first_name", "last_name")),
             },
         ),
         (

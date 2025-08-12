@@ -12,6 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 SECRET_KEY = os.environ["DJANGO_SECRET_KEY"]
+JWT_SECRET_KEY = os.environ["JWT_SECRET_KEY"]
 
 DEBUG = True
 
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
     "apps.core",
     "apps.users",
     "apps.business",
+    "apps.api",
     "apps.spa",
 ]
 
@@ -81,7 +83,7 @@ DATABASES = {
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 AUTH_USER_MODEL = "users.User"
-# LOGIN_URL = reverse_lazy("users:login")
+LOGIN_URL = "/login"
 # LOGIN_REDIRECT_URL = reverse_lazy("users:redirect")
 
 # Password validation
@@ -144,8 +146,8 @@ CACHES = {
     },
 }
 
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
-SESSION_COOKIE_AGE = 3600 * 24  # 1 day
+# Session
+SESSION_COOKIE_AGE = 3600 * 24 * 14  # 14 days
 SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"  # Caches default
 
 # Email

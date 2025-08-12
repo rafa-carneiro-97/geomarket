@@ -3,7 +3,7 @@ from django.conf import settings
 from django.db import models
 from django.core.mail import send_mail
 from django.contrib.auth.base_user import BaseUserManager, AbstractBaseUser
-from django.contrib.auth.models import PermissionsMixin, Group, Permission
+from django.contrib.auth.models import PermissionsMixin, Permission, Group
 
 
 class CustomUserManager(BaseUserManager):
@@ -56,15 +56,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     )
 
     is_staff = models.BooleanField(
-        verbose_name="é um funcionário",
+        verbose_name="é da equipe de desenvolvimento",
         default=False,
         null=False,
-    )
-
-    is_superuser = models.BooleanField(
-        verbose_name="é um superusuário",
-        default=False,
-        null=False,
+        help_text="Designa se o usuário pode efetuar o login neste área de administração.",
     )
 
     is_active = models.BooleanField(
@@ -92,7 +87,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         managed = True
-        db_table = "user"
         verbose_name = "usuário"
         verbose_name_plural = "usuários"
 
@@ -127,17 +121,15 @@ class User(AbstractBaseUser, PermissionsMixin):
             ).start()
 
 
-class CustomPermissionGroup(Group):
+class CustomGroup(Group):
     class Meta:
-        db_table = "user_permission_groups"
         proxy = True
-        verbose_name = "grupo de permissões"
-        verbose_name_plural = "grupos de permissões"
+        verbose_name = "grupo"
+        verbose_name_plural = "grupos"
 
 
 class CustomPermission(Permission):
     class Meta:
-        db_table = "users_permissions"
         proxy = True
         verbose_name = "permissão"
         verbose_name_plural = "permissões"

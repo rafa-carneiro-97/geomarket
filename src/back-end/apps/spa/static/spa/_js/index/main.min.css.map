@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["c:\\Users\\tiago\\Desktop\\Repositorio\\Github\\Geomarket\\src\\front-end\\spa\\App.vue"],
+  "sourcesContent": ["<template>\n    <component v-if=\"route.meta.renderMenu !== false\" :is=\"menu\" />\n\n    <RouterView v-slot=\"{ Component, route }\">\n        <transition name=\"v\" mode=\"out-in\">\n            <component :is=\"Component\" :key=\"route.path\" />\n        </transition>\n    </RouterView>\n</template>\n\n<script setup lang=\"ts\">\nimport { ref, watch, computed, defineAsyncComponent } from 'vue'\nimport { useRoute } from 'vue-router'\nimport { gsap } from 'gsap'\nimport { ScrollTrigger, ScrollSmoother, ScrollToPlugin, MorphSVGPlugin } from 'gsap/all'\n\nconst route = useRoute()\n\nconst menu = computed(() => {\n    if (route.meta.requiresAuth === true) {\n        return defineAsyncComponent(() => import('@/components/menu/PrivateMenu.vue'))\n    }\n\n    return defineAsyncComponent(() => import('@/components/menu/PublicMenu.vue'))\n})\n\ngsap.registerPlugin(ScrollTrigger, ScrollSmoother, ScrollToPlugin, MorphSVGPlugin)\n\nconst previousScrollHeight = ref(document.body.scrollHeight)\n\nwatch(previousScrollHeight, () => {\n    // Refresh all scroll triggers\n    ScrollTrigger.getAll().forEach((item) => {\n        item.refresh()\n    })\n})\n</script>\n\n<style lang=\"css\">\n.v-enter-active,\n.v-leave-active {\n    transition: opacity 0.8s;\n}\n\n.v-enter-from,\n.v-leave-to {\n    opacity: 0;\n}\n</style>\n"],
+  "mappings": "AAuCA,CAAA,+BAEI,WAAA,QAAA,GACJ,CAEA,CAAA,yBAEI,QAAA,CACJ",
+  "names": []
+}
