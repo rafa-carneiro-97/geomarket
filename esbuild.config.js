@@ -3,9 +3,55 @@ import path from 'path'
 import esbuild from 'esbuild'
 import { fileURLToPath, URL } from 'url'
 import vuePlugin from 'esbuild-plugin-vue-next'
+import dotenv from 'dotenv'
 
-const style_plugin = {
-    name: 'inline-style-plugin',
+const isDevMode = process.argv.includes('--dev')
+
+function envPlugin(path) {
+    if (!fs.existsSync(path)) {
+        throw new Error(`The .env path "${path}" does not exists`)
+    }
+
+    const parsed = dotenv.parse(fs.readFileSync(path))
+
+    return {
+        name: 'env',
+        setup({ onResolve, onLoad }) {
+            // Intercept import paths called "env" and tag them with the "env-ns" namespace.
+            onResolve({ filter: /^env$/ }, (args) => {
+                return {
+                    path: args.path,
+                    namespace: 'env-ns',
+                    external: false,
+                }
+            })
+
+            function parseEnvValue(value) {
+                if (value === 'true') return true
+                if (value === 'false') return false
+                if (!isNaN(value)) return Number(value)
+                return value
+            }
+
+            // Load paths tagged with the "env-ns" namespace.
+            onLoad({ filter: /.*/, namespace: 'env-ns' }, () => {
+                const processed = Object.fromEntries(
+                    Object.entries(parsed).map(([key, value]) => {
+                        return [key, parseEnvValue(value)]
+                    }),
+                )
+
+                return {
+                    contents: JSON.stringify(processed),
+                    loader: 'json',
+                }
+            })
+        },
+    }
+}
+
+const stylePlugin = {
+    name: 'style',
     setup({ onLoad }) {
         onLoad({ filter: /\.css$/ }, (args) => {
             const css = fs.readFileSync(args.path, 'utf8')
@@ -18,8 +64,8 @@ const style_plugin = {
     },
 }
 
-const outdir_cleaner_plugin = {
-    name: 'outdir-cleaner-plugin',
+const outdirCleanerPlugin = {
+    name: 'outdir-cleaner',
     setup({ onStart, initialOptions }) {
         onStart(function () {
             const dir = path.resolve(initialOptions.outdir)
@@ -31,12 +77,12 @@ const outdir_cleaner_plugin = {
     },
 }
 
-const logger_plugin = {
-    name: 'logger-plugin',
+const loggerPlugin = {
+    name: 'logger',
     setup({ onStart, onEnd, initialOptions }) {
-        let start_time
+        let startTime
         onStart(function () {
-            start_time = Date.now()
+            startTime = Date.now()
         })
 
         onEnd((result) => {
@@ -60,18 +106,18 @@ const logger_plugin = {
                 console.log('\x1b[33m%s\x1b[0m', `Size: ${(stat.size / 1024).toFixed(1)} kb`)
             }
 
-            const dir_path = initialOptions.outdir
-            if (dir_path) {
-                const files = fs.readdirSync(dir_path, {
+            const dirPath = initialOptions.outdir
+            if (dirPath) {
+                const files = fs.readdirSync(dirPath, {
                     withFileTypes: true,
                     recursive: true,
                 })
 
                 for (const item of files) {
-                    const item_path = path.resolve(item.parentPath, item.name)
-                    const stat = fs.statSync(item_path)
+                    const itemPath = path.resolve(item.parentPath, item.name)
+                    const stat = fs.statSync(itemPath)
                     if (stat.isFile()) {
-                        console.log('\x1b[34m%s\x1b[0m', `build finished: ${item_path}`)
+                        console.log('\x1b[34m%s\x1b[0m', `build finished: ${itemPath}`)
                         console.log(
                             '\x1b[33m%s\x1b[0m',
                             `Size: ${(stat.size / 1024).toFixed(1)} kb`,
@@ -80,37 +126,43 @@ const logger_plugin = {
                 }
             }
 
-            console.log('\x1b[32m%s\x1b[0m', `Done in ${Date.now() - start_time} ms`)
+            console.log('\x1b[32m%s\x1b[0m', `Done in ${Date.now() - startTime} ms`)
         })
     },
 }
 
-const default_option = {
+const defaultOption = {
     tsconfig: '.\\tsconfig.json',
     bundle: true,
     minify: true,
-    sourcemap: false,
+    sourcemap: isDevMode,
     platform: 'browser',
     target: ['chrome90', 'firefox120'],
     format: 'esm',
     logLevel: 'silent',
-    plugins: [style_plugin, logger_plugin],
+    plugins: [stylePlugin, loggerPlugin],
 }
 
 const options = [
     {
-        ...default_option,
+        ...defaultOption,
+        entryPoints: ['src\\front-end\\spa\\main.ts'],
+        outdir: '.\\src\\back-end\\apps\\spa\\static\\spa\\_js\\index\\',
+        publicPath: '/static/spa/_js/index',
+        charset: 'utf8',
+        splitting: true,
         alias: {
             '@': fileURLToPath(new URL('.\\src\\front-end\\spa', import.meta.url)),
         },
-        entryPoints: ['src\\front-end\\spa\\main.ts'],
-        splitting: true,
-        outdir: '.\\src\\back-end\\apps\\spa\\static\\spa\\_js\\index\\',
-        publicPath: '/static/spa/_js/index',
-        plugins: [...default_option.plugins, outdir_cleaner_plugin, vuePlugin()],
-        entryNames: '[dir]/[name].min',
-        chunkNames: 'bundled-chunks/[name]-[hash].min',
-        assetNames: 'bundled-assets/[name]-[hash]',
+        plugins: [
+            ...defaultOption.plugins,
+            outdirCleanerPlugin,
+            envPlugin('src\\front-end\\spa\\.env'),
+            vuePlugin(),
+        ],
+        entryNames: '[dir]\\[name].min',
+        chunkNames: 'bundled-chunks\\[name]-[hash].min',
+        assetNames: 'bundled-assets\\[name]-[hash]',
         loader: {
             '.webp': 'file',
             '.png': 'file',

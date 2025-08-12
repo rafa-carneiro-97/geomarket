@@ -36,7 +36,7 @@ npm run styles-dev
 Compile and minify some javascript files in watch mode:
 
 ```sh
-npm run build
+npm run build-dev
 ```
 
 #### Type check
