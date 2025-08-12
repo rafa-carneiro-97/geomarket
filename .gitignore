@@ -38,6 +38,9 @@ logs
 **/*.min.js
 **/*.min.css
 
+# Map files
+**/*.min.js.map
+**/*.min.css.map
 
 # Bundle generated files
 **/bundled-assets
