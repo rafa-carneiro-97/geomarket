@@ -2,6 +2,63 @@
     @apply table pl-1 text-sm text-red-600 italic;
 }
 
-.invalid-field {
-    @apply border border-red-600;
+.field {
+    @apply relative mt-4 pt-6;
+
+    label {
+        @apply absolute top-6 left-0 z-0 transition-all duration-300;
+    }
+
+    &:has(input:focus),
+    &:has(input:not(:placeholder-shown)) {
+        label {
+            @apply top-0 -left-2 scale-75;
+        }
+    }
+
+    &:has(input:focus) {
+        label {
+            @apply text-gray-600 text-sky-500;
+        }
+    }
+
+    input[type='password'],
+    input[type='text'] {
+        @apply relative z-10 w-full border-b border-gray-300 transition-all duration-300 focus:border-sky-500;
+    }
+
+    input[type='range'] {
+        @apply cursor-grab accent-blue-500 active:cursor-grabbing;
+
+        &::-webkit-slider-thumb {
+            @apply rounded-full shadow-sm shadow-black/20;
+        }
+        &::-moz-range-thumb {
+            @apply rounded-full shadow-sm shadow-black/20;
+        }
+    }
+
+    &.invalid-field {
+        label {
+            @apply text-red-600;
+        }
+
+        input {
+            @apply border-red-600;
+        }
+    }
+}
+
+.checkbox {
+    label {
+        @apply inline-flex cursor-pointer flex-row items-center justify-start rounded p-2 hover:bg-gray-100;
+
+        &:has(input:checked) {
+            @apply text-green-800;
+        }
+
+        input[type='checkbox'] {
+            @apply mr-2 size-4.5 rounded-full accent-green-600;
+        }
+    }
 }
