@@ -1,40 +1,39 @@
 import { defineStore } from 'pinia'
 import axios from 'axios'
+import { employeeStore } from '@/stores/employee'
+import { breadcrumbsStore } from '@/stores/breadcrumbs'
 
-const AUTH_STORAGE_NAMES = {
-    token: 'authToken',
-    // permissions : Array<string: string>
-}
+import type { UserInfo, LoginDetail } from '@/types/stores/auth'
 
-interface UserInfo {
-    firstName: string
-    lastName: string
-    email: string
-    isStaff: boolean
-}
-
-interface LoginDetail {
-    username: string
-    password: string
-    stayConnected?: boolean
-}
+const AUTH_TOKEN_NAME = 'authToken'
 
 export const authStore = defineStore('auth', {
     state: () => ({
-        token: localStorage.getItem(AUTH_STORAGE_NAMES.token) || '',
+        token:
+            localStorage.getItem(AUTH_TOKEN_NAME) || sessionStorage.getItem(AUTH_TOKEN_NAME) || '',
         userInfo: null as UserInfo | null,
-        // permissions: JSON.parse(localStorage.getItem('permissions') || '[]'),
     }),
 
     actions: {
         async validateToken(): Promise<boolean> {
-            return axios.get('api/auth/token')
+            return axios
+                .get('/api/auth/token/validate')
+                .then((response) => {
+                    if (response.status === 204) {
+                        return true
+                    }
+
+                    return false
+                })
+                .catch(() => {
+                    return false
+                })
         },
 
         async login({ username, password, stayConnected = false }: LoginDetail) {
             return axios
                 .post(
-                    'api/login/form',
+                    '/api/login/form',
                     {
                         username: username,
                         password: password,
@@ -46,25 +45,30 @@ export const authStore = defineStore('auth', {
                 )
                 .then((response) => {
                     this.token = response.data.token
+                    sessionStorage.setItem(AUTH_TOKEN_NAME, this.token)
 
                     if (stayConnected === true) {
-                        localStorage.setItem(AUTH_STORAGE_NAMES.token, this.token)
+                        localStorage.setItem(AUTH_TOKEN_NAME, this.token)
                     }
                 })
         },
 
         logout() {
-            this.userInfo = null
-            localStorage.removeItem(AUTH_STORAGE_NAMES.token)
-            this.token = ''
+            sessionStorage.removeItem(AUTH_TOKEN_NAME)
+            localStorage.removeItem(AUTH_TOKEN_NAME)
+            this.$reset()
+            employeeStore().reset()
+            breadcrumbsStore().reset()
         },
 
-        async fetchUserInfo() {
+        async fetchInfo() {
             if (this.userInfo === null) {
-                await axios.get('api/auth/user/info').then((response) => {
+                await axios.get('/api/auth/user/info').then((response) => {
                     this.userInfo = response.data
                 })
             }
+
+            return this.userInfo
         },
     },
 })

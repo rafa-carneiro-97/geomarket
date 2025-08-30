@@ -40,7 +40,7 @@ class Company(models.Model):
         return f"{self.name}"
 
 
-class Store(models.Model):
+class Establishment(models.Model):
     id = models.AutoField(
         auto_created=True,
         primary_key=True,
@@ -63,24 +63,29 @@ class Store(models.Model):
         db_index=True,
     )
 
+    is_active = models.BooleanField(
+        verbose_name="está ativo",
+        default=True,
+    )
+
     class Meta:
         managed = True
         verbose_name = "loja"
         verbose_name_plural = "lojas"
 
     def __str__(self):
-        return f"{self.id}"
+        return f"{self.name} ({self.id})"
 
 
-class StorePermission(models.Model):
+class EstablishmentPermission(models.Model):
     id = models.AutoField(
         auto_created=True,
         primary_key=True,
         verbose_name="ID",
     )
 
-    store = models.ForeignKey(
-        Store,
+    establishment = models.ForeignKey(
+        Establishment,
         verbose_name="loja",
         on_delete=models.CASCADE,
         null=False,
@@ -115,19 +120,20 @@ class StorePermission(models.Model):
         managed = True
         constraints = [
             models.UniqueConstraint(
-                fields=["store", "codename"], name="unique_store_permission"
+                fields=["establishment", "codename"],
+                name="unique_establishment_permission",
             )
         ]
         verbose_name = "lojas → permissão"
         verbose_name_plural = "lojas → permissões"
 
     def __str__(self):
-        return f"{self.store.name} — {self.codename}"
+        return f"{self.establishment.name} — {self.codename}"
 
 
-class StoreGroup(models.Model):
-    store = models.ForeignKey(
-        Store,
+class EstablishmentGroup(models.Model):
+    establishment = models.ForeignKey(
+        Establishment,
         verbose_name="loja",
         on_delete=models.CASCADE,
         null=False,
@@ -143,7 +149,7 @@ class StoreGroup(models.Model):
     )
 
     permissions = models.ManyToManyField(
-        StorePermission,
+        EstablishmentPermission,
         verbose_name="permissões",
         help_text="Permissões específicas para o grupo.",
         blank=True,
@@ -152,26 +158,15 @@ class StoreGroup(models.Model):
     class Meta:
         managed = True
         constraints = [
-            models.UniqueConstraint(fields=["store", "name"], name="unique_store_group")
+            models.UniqueConstraint(
+                fields=["establishment", "name"], name="unique_establishment_group"
+            )
         ]
         verbose_name = "lojas → grupo"
         verbose_name_plural = "lojas → grupos"
 
     def __str__(self):
-        return f"{self.store.name} — {self.name}"
-
-    def clean(self):
-        if self.pk:
-            # Ensure all permissions belong to the same store
-            is_invalid = self.permissions.exclude(store=self.store).exists()
-            if is_invalid:
-                raise ValidationError(
-                    {
-                        "permissions": "Todos as pemissões do grupo devem pertencer à mesma loja do mesmo."
-                    }
-                )
-
-        super().clean()
+        return f"{self.establishment.name} — {self.name}"
 
 
 class Employee(models.Model):
@@ -181,8 +176,8 @@ class Employee(models.Model):
         verbose_name="ID",
     )
 
-    store = models.ForeignKey(
-        Store,
+    establishment = models.ForeignKey(
+        Establishment,
         on_delete=models.CASCADE,
         verbose_name="loja",
         null=False,
@@ -206,7 +201,7 @@ class Employee(models.Model):
     )
 
     permissions = models.ManyToManyField(
-        StorePermission,
+        EstablishmentPermission,
         verbose_name="permissões da loja",
         help_text="Permissões específicas para o funcionário.",
         blank=True,
@@ -214,7 +209,7 @@ class Employee(models.Model):
     )
 
     groups = models.ManyToManyField(
-        StoreGroup,
+        EstablishmentGroup,
         verbose_name="grupos da loja",
         help_text="Grupos que o funcionário faz parte.",
         blank=True,
@@ -224,68 +219,157 @@ class Employee(models.Model):
     class Meta:
         managed = True
         constraints = [
-            models.UniqueConstraint(fields=["store", "user"], name="unique_employee")
+            models.UniqueConstraint(
+                fields=["establishment", "user"], name="unique_employee"
+            )
         ]
         verbose_name = "funcionário"
         verbose_name_plural = "funcionários"
 
-    class StorePermissions:
+    class EstablishmentPermissions:
         default = "CRUD"
 
     def __str__(self):
-        return f"{self.store.name} — {self.user.first_name}"
-
-    def clean(self):
-        # Ensure all permissions belong to the same store
-        if self.pk:
-            is_invalid = self.permissions.exclude(store=self.store).exists()
-            if is_invalid:
-                raise ValidationError(
-                    {
-                        "permissions": "Todos as pemissões do fuincionário devem pertencer à mesma loja do mesmo."
-                    }
-                )
-
-        if self.pk:
-            is_invalid = self.groups.exclude(store=self.store).exists()
-            if is_invalid:
-                raise ValidationError(
-                    {
-                        "groups": "Todos os grupos do funcionário devem pertencer à mesma loja do mesmo."
-                    }
-                )
-
-        return super().clean()
+        return f"{self.establishment.name} — {self.user.first_name}"
 
     def _get_cache_key(self) -> str:
-        return f"emp-{self.pk}:store_perms:store-{self.store.id}"
+        return f"business:employee_{self.pk}_{self.establishment.id}:permissions"
 
     def has_permission(self, codename: str, use_cache=True):
         return codename in self.get_all_permissions(use_cache=use_cache)
 
-    def get_all_permissions(self, use_cache=True) -> set:
+    def get_all_permissions(self, use_cache=True) -> list:
+        key = self._get_cache_key()
+        cached = cache.get(key)
+        if use_cache and cached is not None:
+            return cached
+
+        employee_perms = self.permissions.values("codename", "name").all()
+        employee_groups = (
+            self.groups.values("permissions__codename", "permissions__name")
+            .annotate(
+                codename=models.F("permissions__codename"),
+                name=models.F("permissions__name"),
+            )
+            .values("name", "codename")
+            .all()
+        )
+
+        permissions = list(employee_perms) + list(employee_groups)
+        unique = [
+            dict(item) for item in {frozenset(perm.items()) for perm in permissions}
+        ]
+
+        cache.set(key, tuple(unique), 10 * 60)  # 10 minutes
+        return unique
+
+    def has_perm(self, codename, use_cache=True):
         if self.is_admin:
             return True
 
-        key = self._get_cache_key()
-        if use_cache:
-            cached = cache.get(key)
-            if cached is not None:
-                return set(cached)
+        permissions = self.get_all_permissions(use_cache=use_cache)
 
-        employee_perms = self.permissions.values_list("codename", flat=True).all()
-        employee_groups = self.groups.values_list(
-            "permissions__codename", flat=True
-        ).all()
+        return any(item["codename"] == codename for item in permissions)
 
-        permissions = set(employee_perms) | set(employee_groups)
+    def has_any_perms(self, codenames: list, use_cache=True) -> bool:
+        if self.is_admin:
+            return True
 
-        cache.set(key, list(permissions), 30 * 60)  # 30 minutes default)
-
-        return permissions
-
-    def has_perm(self, codename, use_cache=True):
-        return codename in self.get_all_permissions(use_cache=use_cache)
+        permissions = self.get_all_permissions()
+        return any(item in permissions for item in codenames)
 
     def delete_perm_cache(self):
         cache.delete(self._get_cache_key())
+
+
+class ProductKeyword(models.Model):
+    keyword = models.CharField(
+        max_length=100,
+        unique=True,
+        verbose_name="palavra-chave",
+    )
+
+    class Meta:
+        managed = True
+        verbose_name = "palavra-chave de produtos"
+        verbose_name_plural = "palavras-chave de produtos"
+
+    def __str__(self):
+        return self.keyword
+
+
+class Product(models.Model):
+    id = models.AutoField(
+        auto_created=True,
+        primary_key=True,
+        verbose_name="ID",
+    )
+
+    name = models.CharField(
+        verbose_name="nome",
+        max_length=255,
+        null=False,
+        blank=False,
+        db_index=True,
+    )
+
+    codebar = models.CharField(
+        verbose_name="código de barra",
+        max_length=80,
+        null=False,
+        blank=False,
+        unique=True,
+    )
+
+    keywords = models.ManyToManyField(
+        ProductKeyword,
+        verbose_name="palavras-chave",
+        blank=True,
+    )
+
+    class Meta:
+        managed = True
+        verbose_name = "produto"
+        verbose_name_plural = "produtos"
+
+    def __str__(self):
+        return f"{self.name} ({self.codebar})"
+
+
+class EstablishmentProduct(models.Model):
+    id = models.AutoField(
+        auto_created=True,
+        primary_key=True,
+        verbose_name="ID",
+    )
+
+    establishment = models.ForeignKey(
+        Establishment,
+        on_delete=models.CASCADE,
+        verbose_name="loja",
+        null=False,
+        blank=False,
+        db_index=True,
+    )
+
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        verbose_name="produto",
+        null=False,
+        blank=False,
+    )
+
+    coordinates = models.JSONField(
+        name="coordenadas",
+        null=False,
+        blank=False,
+    )
+
+    class Meta:
+        managed = True
+        verbose_name = "produto da loja"
+        verbose_name_plural = "produtos da loja"
+
+    def __str__(self):
+        return f"{self.establishment} - {self.product}"

@@ -35,18 +35,18 @@ def _is_valid_custom(value) -> bool:
 
 def _get_models_perms(content_type: ContentType) -> list:
     model = content_type.model_class()
-    store_permissions = getattr(model, "StorePermissions", None)
-    default = getattr(store_permissions, "default", [])
-    custom = getattr(store_permissions, "custom", [])
+    establishment_permissions = getattr(model, "EstablishmentPermissions", None)
+    default = getattr(establishment_permissions, "default", [])
+    custom = getattr(establishment_permissions, "custom", [])
 
     if default and not _is_valid_default(default):
         raise TypeError(
-            f'The only allowed values for "permissions" in Model {model.__name__}.StorePermissions  are "CRUD"'
+            f'The only allowed values for "permissions" in Model {model.__name__}.EstablishmentPermissions  are "CRUD"'
         )
 
     if custom and not _is_valid_custom(custom):
         raise TypeError(
-            f'Expected a list of (str, str) tuples for "custom" in Model {model.__name__}.StorePermissions'
+            f'Expected a list of (str, str) tuples for "custom" in Model {model.__name__}.EstablishmentPermissions'
         )
 
     permissions = []
@@ -63,8 +63,10 @@ def _get_models_perms(content_type: ContentType) -> list:
     return permissions
 
 
-@receiver(post_save, sender=models.Store)
-def create_store_permissions(sender, instance: models.Store, created, **kwargs):
+@receiver(post_save, sender=models.Establishment)
+def create_establishment_permissions(
+    sender, instance: models.Establishment, created, **kwargs
+):
     if not created:
         return
 
@@ -74,8 +76,8 @@ def create_store_permissions(sender, instance: models.Store, created, **kwargs):
         permissions = _get_models_perms(content)
         for codename, name in permissions:
             to_create.append(
-                models.StorePermission(
-                    store=instance,
+                models.EstablishmentPermission(
+                    establishment=instance,
                     content_type=content,
                     codename=codename,
                     name=name,
@@ -83,17 +85,17 @@ def create_store_permissions(sender, instance: models.Store, created, **kwargs):
             )
     if to_create:
         with transaction.atomic():
-            models.StorePermission.objects.bulk_create(
+            models.EstablishmentPermission.objects.bulk_create(
                 to_create, ignore_conflicts=False
             )
 
 
 @receiver(post_migrate, sender=apps.get_app_config("business"))
-def update_store_permissions(sender, **kwargs):
+def update_establishment_permissions(sender, **kwargs):
     """
-    Update StorePermissions for all models with store_permissions in Meta
+    Update EstablishmentPermissions for all models with establishment_permissions in Meta
     """
-    stores = models.Store.objects.order_by("id").all()
+    establishments = models.Establishment.objects.order_by("id").all()
     content_types = ContentType.objects.all()
 
     for content in content_types:
@@ -102,22 +104,25 @@ def update_store_permissions(sender, **kwargs):
         if not permissions:
             continue
 
-        existing_permissions = models.StorePermission.objects.filter(
+        existing_permissions = models.EstablishmentPermission.objects.filter(
             content_type=content
-        ).values_list("store_id", "codename")
+        ).values_list("establishment__id", "codename")
         q_objects = Q()
         to_create = []
 
-        for store in stores:
+        for item in establishments:
             for codename, name in permissions:
                 q_objects |= Q(
-                    codename=codename, name=name, store=store, content_type=content
+                    codename=codename,
+                    name=name,
+                    establishment=item,
+                    content_type=content,
                 )
 
-                if (store.id, codename) not in existing_permissions:
+                if (item.id, codename) not in existing_permissions:
                     to_create.append(
-                        models.StorePermission(
-                            store=store,
+                        models.EstablishmentPermission(
+                            establishment=item,
                             content_type=content,
                             codename=codename,
                             name=name,
@@ -125,9 +130,9 @@ def update_store_permissions(sender, **kwargs):
                     )
         if to_create:
             with transaction.atomic():
-                models.StorePermission.objects.bulk_create(
+                models.EstablishmentPermission.objects.bulk_create(
                     to_create, ignore_conflicts=False
                 )
 
         # Remove unset permissions
-        models.StorePermission.objects.exclude(q_objects).delete()
+        models.EstablishmentPermission.objects.exclude(q_objects).delete()

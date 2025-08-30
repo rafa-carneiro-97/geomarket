@@ -1,17 +1,17 @@
 <template>
-    <div>
+    <div class="flex- relative flex">
         <button
             type="button"
             aria-label="Abrir leitor de código de barra"
-            @click="setHiddenStateFalse"
-            class="cursor-pointer border border-black/10 bg-gray-100"
+            @click="open"
+            class="group cursor-pointer border border-black/10 bg-gray-100"
         >
-            <Scan :size="30" class="stroke-gray-600" />
+            <Scan :size="23" class="stroke-gray-600 group-hover:stroke-gray-800" />
         </button>
 
-        <section
+        <div
             ref="container"
-            class="fixed top-0 left-0 z-100 h-dvh w-dvw overflow-y-scroll bg-black/80 pb-6"
+            class="fixed top-0 left-0 z-100 h-dvh w-dvw overflow-y-scroll bg-black/90 pb-6"
             :class="{ hidden: isHidden }"
         >
             <X
@@ -19,7 +19,7 @@
                 :strokeWidth="2"
                 @click="isHidden = true"
                 aria-label="Fechar"
-                class="boder-l ml-auto cursor-pointer bg-white/5 stroke-gray-300 p-1 hover:stroke-white"
+                class="boder-l ml-auto cursor-pointer stroke-gray-300 p-1 hover:stroke-white"
             />
 
             <BaseAlert
@@ -29,14 +29,20 @@
                 :key="alert.key"
             />
 
-            <div class="mx-auto w-11/12 max-w-lg">
+            <TextLoading
+                v-if="isOptionsLoading"
+                :isLoading="isOptionsLoading"
+                class="mx-auto mt-10 table text-white"
+            />
+
+            <div v-if="selectOptions.length > 0" class="mx-auto w-11/12 max-w-lg">
                 <BaseSelect
                     @selectedValue="setDeviceID"
                     label="Câmera"
                     name="video-device"
                     placeholder="Selecione o dispositivo"
                     :options="selectOptions"
-                    class="[&>span]:text-white"
+                    class="text-white"
                 />
 
                 <div
@@ -52,45 +58,60 @@
                         class="relative z-10 w-full object-cover object-center"
                         :srcObject="stream"
                     ></video>
+
+                    <svg
+                        v-if="stream"
+                        viewBox="0 0 160 90"
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="absolute top-0 left-0 z-90 size-full drop-shadow-xs drop-shadow-black/50"
+                    >
+                        <g stroke="white" stroke-width="2" fill="none">
+                            <path d="M5 25 V10 A5 5 0 0 1 10 5 H25" />
+                            <path d="M155 25 V10 A5 5 0 0 0 150 5 H135" />
+                            <path d="M5 65 V80 A5 5 0 0 0 10 85 H25" />
+                            <path d="M155 65 V80 A5 5 0 0 1 150 85 H135" />
+                        </g>
+                    </svg>
                 </div>
 
-                <CameraControl
+                <AsyncCameraControl
                     v-if="stream"
                     :videoTrack="stream.getVideoTracks()[0]"
                     class="border-t-transparent"
                 />
             </div>
-        </section>
+        </div>
     </div>
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef, watch, onBeforeUnmount } from 'vue'
+import { ref, useTemplateRef, watch, onBeforeUnmount, defineAsyncComponent } from 'vue'
 import { BrowserMultiFormatReader, IScannerControls, BarcodeFormat } from '@zxing/browser'
 import { DecodeHintType } from '@zxing/library'
-import { Video, VideoOff, Scan, X, LucideIcon } from 'lucide-vue-next'
+import { Video, VideoOff, Scan, X } from 'lucide-vue-next'
 import gsap from 'gsap'
 import BaseSelect from '@/components/form/BaseSelect.vue'
-import BaseAlert, { AlertStatus } from '@/components/BaseAlert.vue'
-import CameraControl from '@/components/barcode/CameraControl.vue'
+import BaseAlert from '@/components/BaseAlert.vue'
+import TextLoading from '@/components/loading/TextLoading.vue'
+import { AlertStatus } from '@/types/components/alert'
+import type { Option } from '@/types/components/forms/select'
+
+const AsyncCameraControl = defineAsyncComponent(
+    () => import('@/components/barcode/CameraControl.vue'),
+)
 
 const emit = defineEmits(['code'])
 
 const container = useTemplateRef('container')
+
 const alert = ref({
     message: '',
     key: 0,
 })
 const isHidden = ref<boolean>(true)
-const selectOptions = ref<
-    Array<{
-        icon?: { component: LucideIcon; class?: string }
-        identifier: string
-        value: string
-    }>
->([])
+const isOptionsLoading = ref<boolean>(true)
+const selectOptions = ref<Array<Option>>([])
 const stream = ref<MediaStream | null>(null)
-
 let cameras: Array<MediaDeviceInfo> = []
 let deviceID: string | null = null
 let reader: null | BrowserMultiFormatReader = null
@@ -100,21 +121,22 @@ onBeforeUnmount(async () => {
     closeStream()
     deviceID = null
     cameras = []
+    reader = null
+    controls?.stop()
+    controls = null
 })
 
-watch(isHidden, (value) => {
-    if (value === true) {
+watch(isHidden, (newValue) => {
+    if (newValue === true) {
         closeStream()
     } else {
         startStream()
     }
 })
 
-async function setHiddenStateFalse() {
-    if (await hasCameraPermissions()) {
-        if (cameras.length === 0) setCameraOptions()
-    }
+function open() {
     isHidden.value = false
+
     gsap.fromTo(
         container.value!,
         {
@@ -125,6 +147,22 @@ async function setHiddenStateFalse() {
             duration: 0.5,
         },
     )
+
+    hasCameraPermissions()
+        .then((hasPermission) => {
+            if (!hasPermission) return
+            setCameraOptions()
+        })
+        .finally(() => {
+            isOptionsLoading.value = false
+        })
+}
+
+function setAlertMessage(msg: string) {
+    alert.value = {
+        message: msg,
+        key: alert.value.key + 1,
+    }
 }
 
 async function hasCameraPermissions(): Promise<boolean> {
@@ -139,38 +177,36 @@ async function hasCameraPermissions(): Promise<boolean> {
             console.error(err)
 
             if (err.name === 'NotAllowedError') {
-                alert.value.message =
-                    'O acesso à câmera foi negado, por favor, habilite o acesso e recarregue a página.'
-                alert.value.key++
+                setAlertMessage(
+                    'O acesso à câmera foi negado, por favor, habilite o acesso e recarregue a página.',
+                )
+
                 return false
             }
 
             if (err.name === 'NotReadableError') {
-                alert.value.message = 'Não há câmeras conectadas ao dispositvo.'
-                alert.value.key++
+                setAlertMessage('Não há câmeras conectadas ao dispositvo.')
                 return false
             }
 
-            alert.value.message = `Erro inesperado, por favor, contact a equipe. Erro: ${err}`
-            alert.value.key++
+            setAlertMessage(`Erro inesperado, por favor, contact a equipe. Erro: ${err}`)
             return false
         })
 }
 
 async function setCameraOptions() {
-    await navigator.mediaDevices.enumerateDevices().then((items) => {
+    navigator.mediaDevices.enumerateDevices().then((items) => {
+        selectOptions.value = []
         cameras = items.filter((item) => item.kind === 'videoinput')
-    })
 
-    cameras.forEach((item, index) => {
-        selectOptions.value.push({
-            icon: { component: Video, class: 'stroke-gray-700' },
-            identifier: item.label,
-            value: index.toString(),
+        cameras.forEach((item, index) => {
+            selectOptions.value.push({
+                icon: { component: Video, class: 'stroke-gray-700' },
+                identifier: item.label,
+                value: index.toString(),
+            })
         })
     })
-
-    console.log(selectOptions.value)
 }
 
 function setDeviceID(choice: string) {
@@ -181,31 +217,26 @@ function setDeviceID(choice: string) {
 function closeStream() {
     stream.value?.getTracks().forEach((track) => track.stop())
     stream.value = null
-    controls?.stop()
-    controls = null
-    reader = null
 }
 
 async function startStream() {
     if (!deviceID) return
-
     closeStream()
 
-    // const hints = new Map()
-    // hints.set(DecodeHintType.TRY_HARDER, true)
-    // hints.set(DecodeHintType.POSSIBLE_FORMATS, [
-    //     BarcodeFormat.AZTEC,
-    //     BarcodeFormat.CODABAR,
-    //     BarcodeFormat.CODE_39,
-    //     BarcodeFormat.CODE_93,
-    //     BarcodeFormat.CODE_128,
-    //     BarcodeFormat.EAN_8,
-    //     BarcodeFormat.EAN_13,
-    //     BarcodeFormat.ITF,
-    //     BarcodeFormat.UPC_A,
-    //     BarcodeFormat.UPC_E,
-    //     BarcodeFormat.UPC_EAN_EXTENSION,
-    // ])
+    const hints = new Map()
+    hints.set(DecodeHintType.TRY_HARDER, true)
+    hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+        BarcodeFormat.CODABAR,
+        BarcodeFormat.CODE_39,
+        BarcodeFormat.CODE_93,
+        BarcodeFormat.CODE_128,
+        BarcodeFormat.EAN_8,
+        BarcodeFormat.EAN_13,
+        BarcodeFormat.ITF,
+        BarcodeFormat.UPC_A,
+        BarcodeFormat.UPC_E,
+        BarcodeFormat.UPC_EAN_EXTENSION,
+    ])
 
     await navigator.mediaDevices
         .getUserMedia({
@@ -216,26 +247,23 @@ async function startStream() {
         })
         .then(async (data) => {
             stream.value = data
-            // reader = new BrowserMultiFormatReader()
-            // controls = await reader.decodeFromStream(data, undefined, (result) => {
-            //     if (result) {
-            //         isHidden.value = true
-            //         emit('code', result?.getText())
-            //     }
-            // })
+            reader = new BrowserMultiFormatReader()
+            controls = await reader.decodeFromStream(data, undefined, (result) => {
+                if (result) {
+                    isHidden.value = true
+                    emit('code', result?.getText())
+                }
+            })
         })
         .catch((err) => {
-            console.log(err)
+            console.error(err)
 
             if (err.name === 'NotReadableError') {
-                alert.value.message =
-                    'Não foi possível inicializar o dispositivo de captura de vídeo.'
-                alert.value.key++
+                setAlertMessage('Não foi possível inicializar o dispositivo de captura de vídeo.')
                 return
             }
 
-            alert.value.message = `Erro inesperado, contacte a equipe. Erro: ${err}`
-            alert.value.key++
+            setAlertMessage(`Erro inesperado, contacte a equipe. Erro: ${err}`)
         })
 }
 </script>

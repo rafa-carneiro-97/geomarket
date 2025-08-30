@@ -77,7 +77,11 @@
                 />
             </label>
 
-            <button type="button" class="btn btn-blue mx-auto mt-4" @click="applyConfig">
+            <button
+                type="button"
+                class="btn btn-blue mx-auto mt-4 rounded-full px-6"
+                @click="applyConfig"
+            >
                 Aplicar
             </button>
         </div>
@@ -87,7 +91,8 @@
 <script setup lang="ts">
 import { reactive, onMounted, computed, ref } from 'vue'
 import { SlidersHorizontal } from 'lucide-vue-next'
-import BaseAlert, { AlertStatus } from '@/components/BaseAlert.vue'
+import BaseAlert from '@/components/BaseAlert.vue'
+import { AlertStatus } from '@/types/components/alert'
 
 const props = defineProps({
     videoTrack: { type: MediaStreamTrack, required: true },

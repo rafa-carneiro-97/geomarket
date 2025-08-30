@@ -1,12 +1,12 @@
 <template>
-    <div class="relative inline-flex min-h-7 min-w-7 items-center justify-center">
+    <div class="relative inline-block min-h-7 min-w-7">
         <LoaderCircle
             v-if="isLoading"
-            class="absolute top-1/2 left-1/2 -translate-1/2 animate-spin"
+            class="absolute top-1/2 left-1/2 -translate-1/2 animate-spin drop-shadow-xs drop-shadow-black/50"
             :stroke-width="3"
         />
 
-        <span v-if="text" :class="{ invisible: isLoading }">
+        <span v-if="text" class="text-center" :class="{ invisible: isLoading }">
             {{ text }}
         </span>
     </div>

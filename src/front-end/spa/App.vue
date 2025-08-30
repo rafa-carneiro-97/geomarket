@@ -1,49 +1,34 @@
 <template>
-    <component v-if="route.meta.renderMenu !== false" :is="menu" />
+    <component v-if="route.meta.renderMenu !== false" :is="menuComponent" id="dynamicMenu" />
 
     <RouterView v-slot="{ Component, route }">
-        <transition name="v" mode="out-in">
+        <Transition name="content" mode="out-in">
             <component :is="Component" :key="route.path" />
-        </transition>
+        </Transition>
     </RouterView>
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed, defineAsyncComponent } from 'vue'
+import { computed, defineAsyncComponent } from 'vue'
 import { useRoute } from 'vue-router'
-import { gsap } from 'gsap'
-import { ScrollTrigger, ScrollSmoother, ScrollToPlugin, MorphSVGPlugin } from 'gsap/all'
 
+const PublicMenu = defineAsyncComponent(() => import('@/components/menu/PublicMenu.vue'))
+const PrivateMenu = defineAsyncComponent(() => import('@/components/menu/PrivateMenu.vue'))
 const route = useRoute()
 
-const menu = computed(() => {
-    if (route.meta.requiresAuth === true) {
-        return defineAsyncComponent(() => import('@/components/menu/PrivateMenu.vue'))
-    }
-
-    return defineAsyncComponent(() => import('@/components/menu/PublicMenu.vue'))
-})
-
-gsap.registerPlugin(ScrollTrigger, ScrollSmoother, ScrollToPlugin, MorphSVGPlugin)
-
-const previousScrollHeight = ref(document.body.scrollHeight)
-
-watch(previousScrollHeight, () => {
-    // Refresh all scroll triggers
-    ScrollTrigger.getAll().forEach((item) => {
-        item.refresh()
-    })
+const menuComponent = computed(() => {
+    return route.meta.requiresAuth === true ? PrivateMenu : PublicMenu
 })
 </script>
 
 <style lang="css">
-.v-enter-active,
-.v-leave-active {
-    transition: opacity 0.8s;
+.content-enter-active,
+.content-leave-active {
+    transition: opacity 0.6s;
 }
 
-.v-enter-from,
-.v-leave-to {
+.content-enter-from,
+.content-leave-to {
     opacity: 0;
 }
 </style>

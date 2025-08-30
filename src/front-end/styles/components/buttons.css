@@ -1,11 +1,19 @@
 .btn {
-    @apply text-shadow relative table cursor-pointer touch-manipulation rounded-full border-r border-b-2 border-black/30 px-6 py-2 text-center font-sans text-lg leading-normal font-bold tracking-wider text-balance no-underline shadow shadow-black/30 outline-2 outline-offset-2 outline-blue-500 select-none active:border-transparent active:shadow-none active:brightness-80 disabled:cursor-not-allowed disabled:opacity-60;
+    @apply text-shadow relative table cursor-pointer touch-manipulation rounded border-r border-b-2 border-black/30 px-2 py-1 text-center font-sans text-lg font-bold text-balance text-white no-underline shadow shadow-black/30 outline-2 outline-offset-2 outline-blue-500 select-none hover:not-disabled:brightness-125 active:not-disabled:border-transparent active:not-disabled:shadow-none active:not-disabled:brightness-80 disabled:cursor-not-allowed disabled:opacity-60;
 }
 
 .btn-blue {
-    @apply bg-blue-600 text-white hover:bg-blue-500;
+    @apply bg-blue-600;
 }
 
 .btn-red {
-    @apply bg-red-500 text-white hover:bg-red-500/80;
+    @apply bg-red-500;
+}
+
+.btn-orange {
+    @apply bg-amber-700/80;
+}
+
+.btn-green {
+    @apply bg-green-700;
 }

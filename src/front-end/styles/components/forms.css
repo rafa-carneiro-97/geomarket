@@ -3,21 +3,23 @@
 }
 
 .field {
-    @apply relative mt-4 pt-6;
+    @apply relative mt-4 pt-5;
 
-    label {
+    & > label {
         @apply absolute top-6 left-0 z-0 transition-all duration-300;
     }
 
-    &:has(input:focus),
-    &:has(input:not(:placeholder-shown)) {
-        label {
-            @apply top-0 -left-2 scale-75;
+    &:has(> input:focus),
+    &:has(> input:not(:placeholder-shown)),
+    &:has(> * > input:focus),
+    &:has(> * > input:not(:placeholder-shown)) {
+        & > label {
+            @apply top-2 -left-1 text-xs;
         }
     }
 
     &:has(input:focus) {
-        label {
+        & > label {
             @apply text-gray-600 text-sky-500;
         }
     }
@@ -39,11 +41,11 @@
     }
 
     &.invalid-field {
-        label {
+        & > label {
             @apply text-red-600;
         }
 
-        input {
+        & > input {
             @apply border-red-600;
         }
     }

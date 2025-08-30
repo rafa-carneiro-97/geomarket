@@ -19,7 +19,7 @@
                 class="stroke-inherit group-hover:opacity-100"
                 :class="{ 'opacity-70': !isExactActive }"
             />
-            <span class="ml-2 flex-1 overflow-x-hidden font-medium text-nowrap"> {{ text }} </span>
+            <span class="ml-2 flex-1 overflow-x-hidden font-medium text-nowrap"> {{ label }} </span>
 
             <span v-if="isExactActive" class="size-2 rounded-full bg-yellow-300"></span>
         </div>
@@ -27,14 +27,14 @@
 </template>
 
 <script setup lang="ts">
-import { useRoute, RouterLink, RouteLocationRaw } from 'vue-router'
-import { LucideIcon } from 'lucide-vue-next'
+import { useRoute, RouterLink, type RouteLocationRaw } from 'vue-router'
+import { type LucideIcon } from 'lucide-vue-next'
 
 const route = useRoute()
 const isCurrent = () => route.path === location.pathname
 
 defineProps<{
-    text: string
+    label: string
     location: RouteLocationRaw
     icon: LucideIcon
 }>()

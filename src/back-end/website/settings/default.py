@@ -81,10 +81,8 @@ DATABASES = {
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
-
 AUTH_USER_MODEL = "users.User"
-LOGIN_URL = "/login"
-# LOGIN_REDIRECT_URL = reverse_lazy("users:redirect")
+
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -139,10 +137,16 @@ MEDIA_URL = "/media/"
 # The absolute path to the media directory
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
+
+# URLS
+LOGIN_URL = "/login"
+LOGOUT_REDIRECT_URL = "/sair"
+
 # Cache
 CACHES = {
     "default": {
         "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "unique-snowflake",
     },
 }
 
@@ -156,7 +160,7 @@ EMAIL_PORT = os.environ["EMAIL_PORT"]
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ["EMAIL_HOST_USER"]
 EMAIL_HOST_PASSWORD = os.environ["EMAIL_HOST_PASSWORD"]
-DEFAULT_FROM_EMAIL = "Site <%s>" % os.environ["EMAIL_HOST_USER"]
+DEFAULT_FROM_EMAIL = "Geomarket <%s>" % os.environ["EMAIL_HOST_USER"]
 EMAIL_SUPPORT = os.environ["EMAIL_SUPPORT"]
 
 

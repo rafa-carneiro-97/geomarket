@@ -44,87 +44,65 @@
     </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import { useTemplateRef, computed, onMounted, PropType, watch } from 'vue'
 import { X } from 'lucide-vue-next'
 import { gsap } from 'gsap'
+import { AlertStatus } from '@/types/components/alert'
 
-export enum AlertStatus {
-    Info = 'info',
-    Error = 'error',
-    Warning = 'warning',
-    Success = 'success',
-}
-
-export default {
-    components: { X },
-
-    props: {
-        message: { type: String, required: true },
-        status: {
-            type: String as PropType<AlertStatus>,
-            required: false,
-            default: AlertStatus.Info,
-        },
+const props = defineProps({
+    message: String,
+    status: {
+        type: String as PropType<AlertStatus>,
+        required: false,
+        default: AlertStatus.Info,
     },
+})
 
-    setup(props) {
-        const card = useTemplateRef<HTMLElement>('card')
-        const isError = computed(() => props.status === AlertStatus.Error)
-        const isInfo = computed(() => props.status === AlertStatus.Info)
-        const isWarning = computed(() => props.status === AlertStatus.Warning)
-        const isSuccess = computed(() => props.status === AlertStatus.Success)
+const card = useTemplateRef<HTMLElement>('card')
+const isError = computed(() => props.status === AlertStatus.Error)
+const isInfo = computed(() => props.status === AlertStatus.Info)
+const isWarning = computed(() => props.status === AlertStatus.Warning)
+const isSuccess = computed(() => props.status === AlertStatus.Success)
 
-        watch(
-            () => props.message,
-            () => {
-                gsap.to(card.value, {
-                    duration: 0.5,
-                    opacity: 0,
-                    height: 0,
-                    marginTop: 0,
-                    marginBottom: 0,
-                    onComplete: () => {
-                        card.value?.removeAttribute('style')
-                        show()
-                    },
-                })
+watch(
+    () => props.message,
+    () => {
+        gsap.to(card.value, {
+            duration: 0.5,
+            opacity: 0,
+            height: 0,
+            marginTop: 0,
+            marginBottom: 0,
+            onComplete: () => {
+                card.value?.removeAttribute('style')
+                show()
             },
-        )
-
-        const show = () => {
-            gsap.from(card.value, {
-                duration: 0.5,
-                opacity: 0,
-                height: 0,
-                marginTop: 0,
-                marginBottom: 0,
-            })
-        }
-
-        const hide = () => {
-            gsap.to(card.value, {
-                duration: 0.5,
-                opacity: 0,
-                height: 0,
-                marginTop: 0,
-                marginBottom: 0,
-            })
-        }
-
-        onMounted(() => {
-            show()
         })
-
-        return {
-            card,
-            isError,
-            isInfo,
-            isWarning,
-            isSuccess,
-            show,
-            hide,
-        }
     },
+)
+
+const show = () => {
+    gsap.from(card.value, {
+        duration: 0.5,
+        opacity: 0,
+        height: 0,
+        marginTop: 0,
+        marginBottom: 0,
+    })
 }
+
+const hide = () => {
+    gsap.to(card.value, {
+        duration: 0.5,
+        opacity: 0,
+        height: 0,
+        marginTop: 0,
+        marginBottom: 0,
+    })
+}
+
+onMounted(() => {
+    show()
+})
 </script>

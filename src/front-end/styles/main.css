@@ -20,6 +20,10 @@
     height: var(--menu-height);
 }
 
+@utility min-h-content {
+    min-height: calc(100dvh - var(--menu-height));
+}
+
 @layer base {
     @import './components/base.css';
 }

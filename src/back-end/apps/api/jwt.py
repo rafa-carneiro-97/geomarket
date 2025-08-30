@@ -23,13 +23,11 @@ def generate_jwt_token(request: http.HttpRequest, user: User):
 
 def authenticate_jwt_header(request: http.HttpRequest) -> User | ValueError:
     auth_header = request.headers.get("Authorization")
-
     if not auth_header or not auth_header.startswith("Bearer "):
         logging.warning("JWT: token not found")
         raise ValueError("Unauthorized")
 
     token = auth_header.split(" ")[1]
-
     try:
         payload = jwt.decode(token, settings.JWT_SECRET_KEY, algorithms=["HS256"])
     except jwt.ExpiredSignatureError:
@@ -62,7 +60,7 @@ def _get_user(
     created_at: str,
 ) -> User | ValueError:
 
-    cache_key = f"user:{identifier}:{email}"
+    cache_key = f"jwt:user:{identifier}:{email}"
     user = cache.get(cache_key, None)
 
     if user is None:

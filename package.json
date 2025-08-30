@@ -27,6 +27,8 @@
         "@types/node": "^24.1.0",
         "@zxing/browser": "^0.1.5",
         "axios": "^1.10.0",
+        "chart.js": "^4.5.0",
+        "chartjs-plugin-datalabels": "^2.2.0",
         "dotenv": "^17.2.1",
         "esbuild": "^0.25.8",
         "esbuild-plugin-vue-next": "^0.1.4",

@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
-import esbuild from 'esbuild'
 import { fileURLToPath, URL } from 'url'
+import esbuild from 'esbuild'
 import vuePlugin from 'esbuild-plugin-vue-next'
 import dotenv from 'dotenv'
 

@@ -1,96 +1,113 @@
 <template>
-    <div>
-        <main>
-            <section class="flex min-h-dvh flex-col items-center justify-center pb-4">
-                <form
-                    @submit.prevent="login"
-                    aria-label="Formulário para realizar o login"
-                    class="mx-auto mt-4 flex w-11/12 max-w-4xl flex-row overflow-hidden rounded-md border border-black/20 shadow shadow-black/10"
-                    novalidate
-                >
-                    <div class="flex w-full flex-col content-between p-8">
-                        <h1 class="font-serif text-4xl font-bold">Login</h1>
+    <main>
+        <section class="min-h-content flex flex-col items-center justify-center py-6">
+            <form
+                @submit.prevent="login"
+                aria-label="Formulário para realizar o login"
+                class="mx-auto flex w-11/12 max-w-4xl flex-row overflow-hidden rounded-md border border-black/20 shadow shadow-black/10"
+            >
+                <div class="flex w-full flex-col content-between p-8 md:w-7/12">
+                    <h1 class="font-serif text-4xl font-bold">Login</h1>
 
-                        <BaseAlert
-                            v-if="alert.message"
-                            :status="AlertStatus.Error"
-                            :message="alert.message"
-                            :key="alert.key"
-                            class="mt-4"
+                    <BaseAlert
+                        v-if="alert.message"
+                        :status="AlertStatus.Error"
+                        :message="alert.message"
+                        :key="alert.key"
+                        class="mt-4"
+                    />
+
+                    <!-- Email -->
+                    <div class="field" :class="{ 'invalid-field': formErrors.email }">
+                        <label for="email">Email:</label>
+
+                        <input
+                            id="email"
+                            type="text"
+                            placeholder=""
+                            autocomplete="email"
+                            v-model="email"
+                            @input="delete formErrors.email"
+                            required
                         />
 
-                        <!-- Email -->
-                        <div class="field" :class="{ 'invalid-field': formErrors.email }">
-                            <label for="email">Email:</label>
-
-                            <input
-                                id="email"
-                                type="text"
-                                placeholder=""
-                                autocomplete="email"
-                                v-model="formData.email"
-                                @input="delete formErrors.email"
-                                required
-                            />
-
-                            <FieldError v-if="formErrors.email" :message="formErrors.email[0]" />
-                        </div>
-
-                        <!-- Password -->
-                        <div class="field" :class="{ 'invalid-field': formErrors.password }">
-                            <label for="password">Senha:</label>
-
-                            <input
-                                id="password"
-                                type="password"
-                                placeholder=""
-                                autocomplete="current-password"
-                                v-model="formData.password"
-                                @input="delete formErrors.password"
-                                required
-                            />
-
-                            <FieldError
-                                v-if="formErrors.password"
-                                :message="formErrors.password[0]"
-                            />
-                        </div>
-
-                        <!-- Stay connected -->
-                        <div class="checkbox mt-6">
-                            <label>
-                                <input type="checkbox" v-model="formData.stayConnected" />
-                                Permanecer conectado
-                            </label>
-                        </div>
-
-                        <div class="flex flex-1 items-center justify-center">
-                            <button type="submit" class="btn btn-blue mx-auto mt-8">
-                                <TextLoading text="Acessar" :isLoading="isLoading" />
-                            </button>
-                        </div>
+                        <FieldError v-if="formErrors.email" :message="formErrors.email[0]" />
                     </div>
 
-                    <img
-                        src="@/assets/public/login/security.webp"
-                        alt=" Ilustração vetorial sobre dados pessoais ou cibersegurança"
-                        class="hidden w-5/12 self-stretch border-l border-black/10 object-cover object-center md:block"
-                    />
-                </form>
+                    <!-- Password -->
+                    <div class="field" :class="{ 'invalid-field': formErrors.password }">
+                        <label for="password">Senha:</label>
 
-                <a href="#" class="mt-8">Esqueceu sua senha?</a>
-            </section>
-        </main>
-    </div>
+                        <input
+                            id="password"
+                            type="password"
+                            placeholder=""
+                            autocomplete="current-password"
+                            v-model="password"
+                            @input="delete formErrors.password"
+                            required
+                        />
+
+                        <FieldError v-if="formErrors.password" :message="formErrors.password[0]" />
+                    </div>
+
+                    <!-- Stay connected -->
+                    <div class="checkbox mt-6">
+                        <label>
+                            <input type="checkbox" v-model="stayConnected" />
+                            Permanecer conectado
+                        </label>
+                    </div>
+
+                    <div class="flex flex-1 items-center justify-center">
+                        <button type="submit" class="btn btn-blue mx-auto mt-4 rounded-full px-6">
+                            <TextLoading text="Acessar" :isLoading="isLoading" />
+                        </button>
+                    </div>
+                </div>
+
+                <img
+                    src="@/assets/public/login/security.webp"
+                    alt="Ilustração vetorial sobre dados pessoais ou cibersegurança"
+                    class="hidden w-5/12 self-stretch border-l border-black/10 object-cover object-center md:block"
+                />
+            </form>
+
+            <div class="relative mt-8 w-11/12 max-w-xs">
+                <RouterLink :to="{ name: 'user-add' }" class="mx-auto table">
+                    Esqueceu sua senha?
+                </RouterLink>
+
+                <hr class="mt-6 border border-black/20" />
+                <span class="mx-auto -mt-3 table bg-white px-1 text-gray-400">OU</span>
+
+                <RouterLink :to="{ name: 'user-add' }" class="mx-auto mt-2 mb-4 table">
+                    Crie uma conta
+                </RouterLink>
+            </div>
+        </section>
+    </main>
 </template>
 
 <script lang="ts" setup>
 import { ref, onBeforeMount } from 'vue'
-import { authStore } from '@/stores/auth'
+import { RouterLink } from 'vue-router'
 import router from '@/router'
-import BaseAlert, { AlertStatus } from '@/components/BaseAlert.vue'
+import { authStore } from '@/stores/auth'
+import BaseAlert from '@/components/BaseAlert.vue'
 import FieldError from '@/components/form/FieldError.vue'
 import TextLoading from '@/components/loading/TextLoading.vue'
+import { AlertStatus } from '@/types/components/alert'
+
+onBeforeMount(() => {
+    if (auth.token != '') {
+        router.replace({ name: 'establishments' })
+    }
+})
+
+const email = defineModel<string>('email', { default: 'funcionario@gmail.com', required: true })
+const password = defineModel<string>('password', { default: '1234asdf1', required: true })
+const stayConnected = defineModel<boolean>('stayConnected', { default: false, required: true })
 
 const auth = authStore()
 
@@ -101,44 +118,34 @@ const alert = ref({
     key: 0,
 })
 
-const formData = ref({
-    email: 'funcionario@gmail.com',
-    password: '1234asdf1',
-    stayConnected: false,
-})
-
 const formErrors = ref<{
     email?: string[]
     password?: string[]
 }>({})
 
-onBeforeMount(() => {
-    if (auth.token != '') {
-        router.replace({ name: 'dashboard' })
-    }
-})
+function setAlertMessage(msg: string) {
+    alert.value.message = msg
+    alert.value.key++
+}
 
 function login() {
     isLoading.value = true
     formErrors.value = {}
-    alert.value.message = ''
-    alert.value.key++
+    setAlertMessage('')
 
     auth.login({
-        username: formData.value.email,
-        password: formData.value.password,
-        stayConnected: formData.value.stayConnected,
+        username: email.value,
+        password: password.value,
+        stayConnected: stayConnected.value,
     })
         .then(() => {
-            console.clear()
             location.reload()
         })
         .catch((error) => {
             isLoading.value = false
 
             if (error.code === 'ERR_NETWORK') {
-                alert.value.message = 'Sua conexão não está estável, por favor, tente mais tarde.'
-                alert.value.key++
+                setAlertMessage('Sua conexão está instável, por favor, tente mais tarde.')
                 return
             }
 
@@ -146,8 +153,7 @@ function login() {
                 const responseErros = error.response.data.errors
 
                 if (responseErros.__all__) {
-                    alert.value.message = responseErros.__all__[0]
-                    alert.value.key++
+                    setAlertMessage(responseErros.__all__[0])
                 }
 
                 formErrors.value = {
@@ -158,9 +164,9 @@ function login() {
                 return
             }
 
-            alert.value.message =
-                'Erro inesperado ao enviar os dados, por favor, contacte a nossa equipe.'
-            alert.value.key++
+            setAlertMessage(
+                'Erro inesperado ao enviar os dados, por favor, contacte a nossa equipe.',
+            )
         })
 }
 </script>

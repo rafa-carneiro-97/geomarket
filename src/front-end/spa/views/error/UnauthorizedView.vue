@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { RouterLink } from 'vue-router'
 import { computed } from 'vue'
+import { RouterLink } from 'vue-router'
+import { authStore } from '@/stores/auth'
+
+const auth = authStore()
 
 const props = defineProps<{
     error?: string
@@ -32,13 +35,18 @@ const message = computed(() => {
             </span>
         </h1>
 
-        <p class="text-shadow my-20 max-w-lg text-center text-2xl font-bold text-pretty text-white">
+        <p class="text-shadow mt-10 max-w-lg text-center text-balance text-white">
             <span v-if="message" class="text-2xl font-bold">
                 {{ message }}
             </span>
-            Por favor, faça o login.
+            <span class="text-2xl font-bold"> Acesso não autorizado. </span>
         </p>
 
-        <RouterLink :to="{ name: 'login' }" class="btn btn-red"> Página de login </RouterLink>
+        <RouterLink
+            :to="{ name: auth.token === '' ? 'login' : 'establishments' }"
+            class="btn btn-red mt-10"
+        >
+            Voltar para o início
+        </RouterLink>
     </div>
 </template>
