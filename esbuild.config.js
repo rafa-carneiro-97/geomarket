@@ -56,9 +56,11 @@ const stylePlugin = {
         onLoad({ filter: /\.css$/ }, (args) => {
             const css = fs.readFileSync(args.path, 'utf8')
             return {
-                contents:
-                    `document.head.appendChild(document.createElement('style'))` +
-                    `.appendChild(document.createTextNode(${JSON.stringify(css)}))`,
+                contents: `document.head.appendChild(
+                        document.createElement('style')
+                    ).appendChild(
+                        document.createTextNode(${JSON.stringify(css).replaceAll(/\\n/g, ' ')})
+                    )`,
             }
         })
     },
@@ -132,6 +134,7 @@ const loggerPlugin = {
 }
 
 const defaultOption = {
+    charset: 'utf8',
     tsconfig: '.\\tsconfig.json',
     bundle: true,
     minify: true,
@@ -140,39 +143,52 @@ const defaultOption = {
     target: ['chrome90', 'firefox120'],
     format: 'esm',
     logLevel: 'silent',
-    plugins: [stylePlugin, loggerPlugin],
+    plugins: [
+        stylePlugin,
+        loggerPlugin,
+        outdirCleanerPlugin,
+        envPlugin('src\\front-end\\spa\\.env'),
+        vuePlugin(),
+    ],
+    splitting: true,
+    entryNames: '[dir]\\[name].min',
+    chunkNames: 'bundled-chunks\\[name]-[hash].min',
+    assetNames: 'bundled-assets\\[name]-[hash]',
+    alias: {
+        '@': fileURLToPath(new URL('.\\src\\front-end\\spa', import.meta.url)),
+    },
+    loader: {
+        '.webp': 'file',
+        '.png': 'file',
+        '.jpg': 'file',
+        '.svg': 'file',
+    },
 }
 
-const options = [
+const entries = [
+    // SPA
     {
         ...defaultOption,
         entryPoints: ['src\\front-end\\spa\\main.ts'],
         outdir: '.\\src\\back-end\\apps\\spa\\static\\spa\\_js\\index\\',
         publicPath: '/static/spa/_js/index',
-        charset: 'utf8',
-        splitting: true,
-        alias: {
-            '@': fileURLToPath(new URL('.\\src\\front-end\\spa', import.meta.url)),
-        },
-        plugins: [
-            ...defaultOption.plugins,
-            outdirCleanerPlugin,
-            envPlugin('src\\front-end\\spa\\.env'),
-            vuePlugin(),
-        ],
-        entryNames: '[dir]\\[name].min',
-        chunkNames: 'bundled-chunks\\[name]-[hash].min',
-        assetNames: 'bundled-assets\\[name]-[hash]',
-        loader: {
-            '.webp': 'file',
-            '.png': 'file',
-            '.jpg': 'file',
-            '.svg': 'file',
-        },
+    },
+
+    // MPA
+    {
+        ...defaultOption,
+        entryPoints: ['src\\front-end\\mpa\\image\\crop\\main.ts'],
+        outdir: 'src\\back-end\\apps\\core\\static\\core\\_js\\widgets\\image_cropper\\bundled\\',
+    },
+
+    {
+        ...defaultOption,
+        entryPoints: ['src\\front-end\\mpa\\map_editor\\main.ts'],
+        outdir: 'src\\back-end\\apps\\business\\static\\business\\_js\\widgets\\map_editor\\bundled\\',
     },
 ]
 
-options.forEach(function (item) {
+entries.forEach(function (item) {
     esbuild.context(item).then((context) => {
         context.watch()
     })

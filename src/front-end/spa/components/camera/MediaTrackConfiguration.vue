@@ -1,5 +1,5 @@
 <template>
-    <div class="border border-gray-300 bg-white p-3">
+    <div class="mx-auto w-11/12 max-w-lg border border-gray-300 bg-white p-3">
         <h3 class="flex flex-row items-center justify-start text-3xl font-bold">
             <SlidersHorizontal :size="30" class="mr-3 stroke-red-700" />
             Configuração da câmera
@@ -79,7 +79,7 @@
 
             <button
                 type="button"
-                class="btn btn-blue mx-auto mt-4 rounded-full px-6"
+                class="btn btn-gray mx-auto mt-4 rounded-full px-6"
                 @click="applyConfig"
             >
                 Aplicar
@@ -138,7 +138,7 @@ async function changeTrackModes() {
             advanced: [modes as MediaTrackConstraintSet],
         })
         .catch((err) => {
-            console.log(err)
+            console.error(err)
             alert.value.message = `Erro ao alterar a câmera para o modo manual. Erro: ${err}`
             alert.value.key++
         })
@@ -179,7 +179,7 @@ async function applyConfig() {
             advanced: [contraints as MediaTrackConstraintSet],
         })
         .catch((err) => {
-            console.log(err)
+            console.error(err)
             alert.value.message = `Erro ao aplicar as configurações, contact a equipe. Erro: ${err}`
             alert.value.key++
         })

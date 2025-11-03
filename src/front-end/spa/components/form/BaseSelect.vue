@@ -25,7 +25,7 @@
 
         <ul
             ref="dropdown"
-            class="absolute top-full left-0 z-100 mt-1 w-full divide-y divide-gray-300 rounded border border-gray-300 bg-white text-black shadow-md shadow-black/20"
+            class="absolute top-full left-0 z-100 mt-1 w-full rounded bg-white shadow-md shadow-black/20"
             :class="{ hidden: isHidden }"
         >
             <li
@@ -37,7 +37,7 @@
 
             <li v-for="(item, index) in options" :key="index">
                 <label
-                    class="justify-betweenhover:bg-blue-200 flex cursor-pointer flex-row items-start p-2 hover:bg-gray-100 has-checked:[&>svg]:visible"
+                    class="flex cursor-pointer flex-row items-start justify-start p-2 hover:bg-gray-100 has-checked:[&>svg]:visible"
                 >
                     <input
                         @click="updateHolder(item.identifier)"
@@ -56,11 +56,16 @@
                             :class="item.icon.class"
                             class="w-6"
                         />
-                        <span class="ml-2">{{ item.identifier }}</span>
+                        <span class="mx-2 text-black">{{ item.identifier }}</span>
                     </div>
 
-                    <Check class="invisible mt-1 ml-2 h-4 stroke-green-800" />
+                    <Check class="invisible ml-auto stroke-green-800" />
                 </label>
+
+                <span
+                    v-if="index != options.length - 1"
+                    class="mx-2 block border border-gray-200"
+                ></span>
             </li>
         </ul>
     </div>
@@ -114,3 +119,10 @@ function onDocumenteMouseDown(event: MouseEvent) {
     }
 }
 </script>
+
+<style scoped>
+form .aligned ul {
+    margin-left: 0 !important;
+    padding-left: 0 !important;
+}
+</style>

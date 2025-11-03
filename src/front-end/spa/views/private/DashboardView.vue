@@ -128,9 +128,11 @@ onBeforeMount(() => {
             label: establishmentInfo.value?.name,
         })
 
-        axios.get(`/api/establishment/${employee.establishment.id}/dashboard`).then((response) => {
-            console.log(response.data)
-        })
+        axios
+            .get(`/api/establishment/${employee.establishment.id}/dashboard/data`)
+            .then((response) => {
+                console.log(response.data)
+            })
     })
 })
 

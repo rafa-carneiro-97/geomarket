@@ -105,6 +105,7 @@
                             id="password1"
                             type="password"
                             placeholder=""
+                            autocomplete="off"
                             v-model="password1"
                             @input="delete formErrors.password1"
                             required
@@ -124,6 +125,7 @@
                             id="password2"
                             type="password"
                             placeholder=""
+                            autocomplete="off"
                             v-model="password2"
                             @input="delete formErrors.password2"
                             required

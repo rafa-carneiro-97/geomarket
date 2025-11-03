@@ -42,16 +42,33 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { onBeforeMount, ref } from 'vue'
 import { Cherry } from 'lucide-vue-next'
 import axios from 'axios'
 import { employeeStore } from '@/stores/employee'
 import { breadcrumbsStore } from '@/stores/breadcrumbs'
 import BreadcrumbsNav from '@/components/breadcrumbs/BreadcrumbsNav.vue'
-import BarcodeReader from '@/components/barcode/BarcodeReader.vue'
+import BarcodeReader from '@/components/camera/barcode/BarcodeReader.vue'
 import TextLoading from '@/components/loading/TextLoading.vue'
+import { EstablishmentInfo } from '@/types/stores/employee'
 
+const props = defineProps<{ establishmentId: number }>()
+const employee = employeeStore()
 const breadcrumbs = breadcrumbsStore()
+const establishmentInfo = ref<EstablishmentInfo | null>()
+
+onBeforeMount(() => {
+    employee.reset()
+    employee.establishment.id = Number(props.establishmentId)
+
+    employee.getEstablishmentInfo().then((data) => {
+        establishmentInfo.value = data as EstablishmentInfo
+
+        breadcrumbs.push({
+            label: 'adicionar produto',
+        })
+    })
+})
 
 breadcrumbs.push({
     icon: Cherry,

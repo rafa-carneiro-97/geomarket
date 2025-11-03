@@ -1,0 +1,28 @@
+.map-drawer-point {
+    background-color: transparent;
+    padding: 0;
+    border: 0px;
+    box-shadow: none;
+    color: black;
+    font-weight: bolder;
+
+    &:before {
+        display: none;
+    }
+}
+
+.map-drawer-edge-cost {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: oklch(0.438 0.218 303.724);
+    color: oklch(82.7% 0.119 306.383);
+    padding: 3px 5px;
+    border: 0px;
+    box-shadow: none;
+    font-weight: bolder;
+
+    &:before {
+        display: none;
+    }
+}

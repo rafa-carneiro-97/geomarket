@@ -51,7 +51,10 @@ import { gsap } from 'gsap'
 import { AlertStatus } from '@/types/components/alert'
 
 const props = defineProps({
-    message: String,
+    message: {
+        type: String,
+        required: true,
+    },
     status: {
         type: String as PropType<AlertStatus>,
         required: false,

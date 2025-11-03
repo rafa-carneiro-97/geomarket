@@ -1,5 +1,5 @@
 <template>
-    <div class="flex- relative flex">
+    <div class="relative flex">
         <button
             type="button"
             aria-label="Abrir leitor de código de barra"
@@ -97,17 +97,14 @@ import { AlertStatus } from '@/types/components/alert'
 import type { Option } from '@/types/components/forms/select'
 
 const AsyncCameraControl = defineAsyncComponent(
-    () => import('@/components/barcode/CameraControl.vue'),
+    () => import('@/components/camera/MediaTrackConfiguration.vue'),
 )
 
 const emit = defineEmits(['code'])
 
 const container = useTemplateRef('container')
 
-const alert = ref({
-    message: '',
-    key: 0,
-})
+const alert = ref({ message: '', key: 0 })
 const isHidden = ref<boolean>(true)
 const isOptionsLoading = ref<boolean>(true)
 const selectOptions = ref<Array<Option>>([])
