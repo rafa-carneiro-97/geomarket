@@ -21,7 +21,7 @@
 src/temp
 
 # Media directory
-src/media
+src/back-end/media
 
 # NodeJs
 **/node_modules
