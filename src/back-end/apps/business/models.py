@@ -2,7 +2,8 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
-from django.core.exceptions import ValidationError
+from apps.core import models as core_models, utils as core_utils
+from . import widgets
 
 
 User = get_user_model()
@@ -40,11 +41,23 @@ class Company(models.Model):
         return f"{self.name}"
 
 
+class CustomGeojsonMap(models.JSONField):
+    def formfield(self, **kwargs):
+        kwargs["widget"] = widgets.GeojsonMapWidget()
+        return super().formfield(**kwargs)
+
+
 class Establishment(models.Model):
     id = models.AutoField(
         auto_created=True,
         primary_key=True,
         verbose_name="ID",
+    )
+
+    map = CustomGeojsonMap(
+        verbose_name="Mapa",
+        blank=False,
+        null=False,
     )
 
     name = models.CharField(
@@ -305,6 +318,15 @@ class Product(models.Model):
         verbose_name="ID",
     )
 
+    photo = core_models.CustomImageField(
+        verbose_name="Foto",
+        subdir="uploads/images/products/photo/",
+        width=256,
+        height=256,
+        null=True,
+        blank=True,
+    )
+
     name = models.CharField(
         verbose_name="nome",
         max_length=255,
@@ -327,6 +349,11 @@ class Product(models.Model):
         blank=True,
     )
 
+    is_active = models.BooleanField(
+        verbose_name="está ativo",
+        default=False,
+    )
+
     class Meta:
         managed = True
         verbose_name = "produto"
@@ -334,6 +361,11 @@ class Product(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.codebar})"
+
+
+models.signals.pre_delete.connect(
+    receiver=core_utils.DeleteCustomImageField("photo"), sender=Product
+)
 
 
 class EstablishmentProduct(models.Model):

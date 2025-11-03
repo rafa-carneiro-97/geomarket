@@ -16,7 +16,7 @@ urlpatterns = [
         views.EstablishmentDataView.as_view(),
     ),
     path(
-        "establishment/<int:establishment_id>/dashboard",
+        "establishment/<int:establishment_id>/dashboard/data",
         views.DashboardDataView.as_view(),
     ),
     path(

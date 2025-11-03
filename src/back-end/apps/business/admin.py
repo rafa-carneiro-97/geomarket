@@ -42,6 +42,9 @@ class ProductKeywordAdmin(admin.ModelAdmin):
 @admin.register(models.Product)
 class ProductAdmin(admin.ModelAdmin):
     form = forms.ProductAdminForm
+    list_display = ("name", "codebar", "is_active")
+    ordering = ("is_active", "name")
+    search_fields = ("name", "codebar")
 
 
 @admin.register(models.EstablishmentProduct)

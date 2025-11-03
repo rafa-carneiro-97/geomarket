@@ -77,5 +77,5 @@ class ProductAdminForm(forms.ModelForm):
         model = models.Product
         fields = "__all__"
         widgets = {
-            "keywords": FilteredSelectMultiple("Permissões", is_stacked=False),
+            "keywords": FilteredSelectMultiple("Palavras-chave", is_stacked=False),
         }
