@@ -15,8 +15,9 @@
         "baseUrl": ".",
         "paths": {
             "@/*": ["src/front-end/spa/*"]
-        }
+        },
+        "lib": ["DOM", "ESNext"]
     },
-    "exclude": ["*/**/__tests__/*"],
-    "include": ["src/front-end/spa/*"]
+    "exclude": ["*/**/__tests__/**/*"],
+    "include": ["src/front-end/**/*"]
 }
