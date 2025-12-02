@@ -9,7 +9,7 @@
                 <h1 class="mt-1 mb-4 text-center text-2xl font-bold">Adicionar funcionário</h1>
 
                 <BaseAlert
-                    :status="AlertStatus.Info"
+                    :status="BaseAlertStatus.Info"
                     message="Para adicionar o funcionário, primeiramente, ele precisa ter uma conta com email verificado. Dessa forma, basta adicioná-lo através do email dele logo abaixo."
                 />
 
@@ -36,13 +36,12 @@
 
 <script lang="ts" setup>
 import { onBeforeMount, ref } from 'vue'
-import axios from 'axios'
 import TextLoading from '@/components/loading/TextLoading.vue'
 import { breadcrumbsStore } from '@/stores/breadcrumbs'
 import { employeeStore } from '@/stores/employee'
 import BreadcrumbsNav from '@/components/breadcrumbs/BreadcrumbsNav.vue'
-import BaseAlert from '@/components/BaseAlert.vue'
-import { AlertStatus } from '@/types/components/alert'
+import BaseAlert from '@/components/alerts/BaseAlert.vue'
+import { BaseAlertStatus } from '@/types/components/alerts'
 
 const props = defineProps<{ establishmentId: number }>()
 const isLoading = ref<boolean>(false)

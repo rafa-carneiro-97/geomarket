@@ -26,6 +26,10 @@
 /* Fixes Django admin page */
 
 .aligned .take-picture {
+    hr {
+        background-color: var(--color-gray-200);
+    }
+
     ul {
         margin: 0 !important;
         padding: 0 !important;

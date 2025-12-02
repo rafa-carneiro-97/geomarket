@@ -66,7 +66,16 @@ class CustomUserCreationForm(auth_forms.UserCreationForm):
         return user
 
 
-class EstablishmentProductCreateForm(forms.ModelForm):
+class GondolaProductCreateForm(forms.ModelForm):
     class Meta:
-        model = business_models.EstablishmentProduct
+        model = business_models.GondolaProduct
         fields = "__all__"
+
+
+class ProductCreateForm(forms.ModelForm):
+    class Meta:
+        model = business_models.Product
+        fields = ("barcode", "name")
+
+    def save(self, commit=True) -> business_models.Product:
+        return super().save(commit)

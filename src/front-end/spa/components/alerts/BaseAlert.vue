@@ -48,7 +48,7 @@
 import { useTemplateRef, computed, onMounted, PropType, watch } from 'vue'
 import { X } from 'lucide-vue-next'
 import { gsap } from 'gsap'
-import { AlertStatus } from '@/types/components/alert'
+import { BaseAlertStatus } from '@/types/components/alerts'
 
 const props = defineProps({
     message: {
@@ -56,17 +56,17 @@ const props = defineProps({
         required: true,
     },
     status: {
-        type: String as PropType<AlertStatus>,
+        type: String as PropType<BaseAlertStatus>,
         required: false,
-        default: AlertStatus.Info,
+        default: BaseAlertStatus.Info,
     },
 })
 
 const card = useTemplateRef<HTMLElement>('card')
-const isError = computed(() => props.status === AlertStatus.Error)
-const isInfo = computed(() => props.status === AlertStatus.Info)
-const isWarning = computed(() => props.status === AlertStatus.Warning)
-const isSuccess = computed(() => props.status === AlertStatus.Success)
+const isError = computed(() => props.status === BaseAlertStatus.Error)
+const isInfo = computed(() => props.status === BaseAlertStatus.Info)
+const isWarning = computed(() => props.status === BaseAlertStatus.Warning)
+const isSuccess = computed(() => props.status === BaseAlertStatus.Success)
 
 watch(
     () => props.message,

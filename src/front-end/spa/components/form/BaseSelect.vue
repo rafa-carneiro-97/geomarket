@@ -2,7 +2,7 @@
     <div ref="select" :aria-label="label" class="relative">
         <span
             class="px-1 text-xs leading-none tracking-tight text-balance"
-            :class="{ 'font-bold text-blue-400': !isHidden }"
+            :class="[isHidden ? 'text-gray-600' : 'font-bold text-blue-400']"
         >
             {{ label }}
         </span>

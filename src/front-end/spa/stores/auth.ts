@@ -7,10 +7,30 @@ import type { UserInfo, LoginDetail } from '@/types/stores/auth'
 
 const AUTH_TOKEN_NAME = 'authToken'
 
+const cookieAuth = {
+    createToken(token: string) {
+        document.cookie = `${AUTH_TOKEN_NAME}=${token}; Path=/; Secure; SameSite=Lax`
+    },
+
+    getTokenValue(): string {
+        const cookies = `; ${document.cookie}`
+        const parts = cookies.split(`${AUTH_TOKEN_NAME}=`)
+
+        if (parts.length !== 2) return ''
+
+        const value = parts.pop()!.split(';').shift() || ''
+
+        return value
+    },
+
+    deleteToken() {
+        document.cookie = `${AUTH_TOKEN_NAME}=; Path=/; Max-Age=0;`
+    },
+}
+
 export const authStore = defineStore('auth', {
     state: () => ({
-        token:
-            localStorage.getItem(AUTH_TOKEN_NAME) || sessionStorage.getItem(AUTH_TOKEN_NAME) || '',
+        token: localStorage.getItem(AUTH_TOKEN_NAME) || cookieAuth.getTokenValue() || '',
         userInfo: null as UserInfo | null,
     }),
 
@@ -45,7 +65,8 @@ export const authStore = defineStore('auth', {
                 )
                 .then((response) => {
                     this.token = response.data.token
-                    sessionStorage.setItem(AUTH_TOKEN_NAME, this.token)
+
+                    cookieAuth.createToken(this.token)
 
                     if (stayConnected === true) {
                         localStorage.setItem(AUTH_TOKEN_NAME, this.token)
@@ -54,7 +75,7 @@ export const authStore = defineStore('auth', {
         },
 
         logout() {
-            sessionStorage.removeItem(AUTH_TOKEN_NAME)
+            cookieAuth.deleteToken()
             localStorage.removeItem(AUTH_TOKEN_NAME)
             this.$reset()
             employeeStore().reset()

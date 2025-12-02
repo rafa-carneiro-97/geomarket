@@ -75,8 +75,8 @@ import { MailQuestionMark } from 'lucide-vue-next'
 import { authStore } from '@/stores/auth'
 import router from '@/router'
 import TextLoading from '@/components/loading/TextLoading.vue'
-import BaseAlert from '@/components/BaseAlert.vue'
-import { AlertStatus } from '@/types/components/alert'
+import BaseAlert from '@/components/alerts/BaseAlert.vue'
+import { BaseAlertStatus } from '@/types/components/alerts'
 
 onBeforeMount(async () => {
     await auth.fetchInfo()
@@ -96,10 +96,10 @@ const confirmButton = useTemplateRef<HTMLButtonElement>('confirmButton')
 const alert = ref({
     message: '',
     key: 0,
-    status: AlertStatus.Error,
+    status: BaseAlertStatus.Error,
 })
 
-function setAlertMessage(msg: string, status: AlertStatus) {
+function setAlertMessage(msg: string, status: BaseAlertStatus) {
     alert.value = {
         message: msg,
         key: alert.value.key++,
@@ -173,7 +173,7 @@ async function submit() {
         })
         .then((response) => {
             if (response.status === 209) {
-                setAlertMessage('Código inválido, tente novamente.', AlertStatus.Error)
+                setAlertMessage('Código inválido, tente novamente.', BaseAlertStatus.Error)
                 isLoadingConfirm.value = false
                 return
             }
@@ -197,7 +197,7 @@ async function sendEmail() {
             if (response.status === 204) {
                 setAlertMessage(
                     'Você alcançou o limite de envios de email, aguarde 24 horas para terntar novamente. Recomendamos entrar em contato com a nossa equipe.',
-                    AlertStatus.Error,
+                    BaseAlertStatus.Error,
                 )
                 isLoadingSendEmail.value = false
                 return

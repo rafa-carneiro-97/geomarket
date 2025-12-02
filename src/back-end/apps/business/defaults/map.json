@@ -1,0 +1,26 @@
+{
+    "meshData": [{ "id": "A", "pos": [1, 5], "edges": [] }],
+    "viewer": {
+        "type": "FeatureCollection",
+        "features": [
+            {
+                "type": "Feature",
+                "properties": {
+                    "styles": { "color": "#99a1af" }
+                },
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [0, 0],
+                            [100, 0],
+                            [100, 100],
+                            [0, 100],
+                            [0, 0]
+                        ]
+                    ]
+                }
+            }
+        ]
+    }
+}

@@ -1,5 +1,5 @@
 <template>
-    <div class="mx-auto w-11/12 max-w-lg border border-gray-300 bg-white p-3">
+    <div class="rounded-b-lg border border-gray-300 bg-white p-3">
         <h3 class="flex flex-row items-center justify-start text-3xl font-bold">
             <SlidersHorizontal :size="30" class="mr-3 stroke-red-700" />
             Configuração da câmera
@@ -8,7 +8,7 @@
         <div class="mt-3">
             <BaseAlert
                 v-if="alert.message"
-                :status="AlertStatus.Error"
+                :status="BaseAlertStatus.Error"
                 :message="alert.message"
                 :key="alert.key"
             />
@@ -91,8 +91,8 @@
 <script setup lang="ts">
 import { reactive, onMounted, computed, ref } from 'vue'
 import { SlidersHorizontal } from 'lucide-vue-next'
-import BaseAlert from '@/components/BaseAlert.vue'
-import { AlertStatus } from '@/types/components/alert'
+import BaseAlert from '@/components/alerts/BaseAlert.vue'
+import { BaseAlertStatus } from '@/types/components/alerts'
 
 const props = defineProps({
     videoTrack: { type: MediaStreamTrack, required: true },

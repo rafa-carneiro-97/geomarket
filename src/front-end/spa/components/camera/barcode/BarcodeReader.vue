@@ -9,78 +9,71 @@
             <Scan :size="23" class="stroke-gray-600 group-hover:stroke-gray-800" />
         </button>
 
-        <div
+        <section
+            v-if="!isHidden"
             ref="container"
-            class="fixed top-0 left-0 z-100 h-dvh w-dvw overflow-y-scroll bg-black/90 pb-6"
-            :class="{ hidden: isHidden }"
+            class="fixed top-0 left-0 z-100 h-dvh w-dvw overflow-y-scroll bg-black/80 py-12"
         >
-            <X
-                :size="50"
-                :strokeWidth="2"
-                @click="isHidden = true"
-                aria-label="Fechar"
-                class="boder-l ml-auto cursor-pointer stroke-gray-300 p-1 hover:stroke-white"
-            />
+            <div class="mx-auto w-11/12 max-w-xl rounded bg-white pb-12">
+                <button type="button" @click="isHidden = true" class="ml-auto block">
+                    <X
+                        :size="36"
+                        :strokeWidth="2"
+                        aria-label="Fechar"
+                        class="boder-l ml-auto cursor-pointer stroke-gray-400 p-1 hover:stroke-black"
+                    />
+                </button>
 
-            <BaseAlert
-                v-if="alert.message"
-                :status="AlertStatus.Error"
-                :message="alert.message"
-                :key="alert.key"
-            />
+                <hr class="h-px bg-gray-200" />
 
-            <TextLoading
-                v-if="isOptionsLoading"
-                :isLoading="isOptionsLoading"
-                class="mx-auto mt-10 table text-white"
-            />
-
-            <div v-if="selectOptions.length > 0" class="mx-auto w-11/12 max-w-lg">
-                <BaseSelect
-                    @selectedValue="setDeviceID"
-                    label="Câmera"
-                    name="video-device"
-                    placeholder="Selecione o dispositivo"
-                    :options="selectOptions"
-                    class="text-white"
+                <BaseAlert
+                    v-if="alert.message"
+                    :status="BaseAlertStatus.Error"
+                    :message="alert.message"
+                    :key="alert.key"
+                    class="mt-4"
                 />
 
-                <div
-                    class="inset-shadow relative mt-3 aspect-video w-full overflow-hidden border border-black/10 bg-gray-200 inset-shadow-sm inset-shadow-black/10"
-                >
-                    <VideoOff
-                        :size="80"
-                        class="absolute top-1/2 left-1/2 z-0 -translate-1/2 stroke-gray-400"
+                <TextLoading
+                    v-if="isLoadingPermissions"
+                    :isLoading="isLoadingPermissions"
+                    class="mx-auto mt-10 table stroke-blue-600"
+                />
+
+                <div v-if="selectOptions.length > 0" class="mx-auto w-11/12 max-w-lg">
+                    <BaseSelect
+                        @selectedValue="setDeviceID"
+                        label="Câmera"
+                        name="video-device"
+                        placeholder="Selecione o dispositivo"
+                        :options="selectOptions"
+                        class="text-white"
                     />
 
-                    <video
-                        autoplay
-                        class="relative z-10 w-full object-cover object-center"
-                        :srcObject="stream"
-                    ></video>
-
-                    <svg
-                        v-if="stream"
-                        viewBox="0 0 160 90"
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="absolute top-0 left-0 z-90 size-full drop-shadow-xs drop-shadow-black/50"
+                    <div
+                        class="inset-shadow relative mt-3 aspect-video w-full overflow-hidden rounded-t-lg border border-black/10 bg-gray-200 inset-shadow-sm inset-shadow-black/10"
                     >
-                        <g stroke="white" stroke-width="2" fill="none">
-                            <path d="M5 25 V10 A5 5 0 0 1 10 5 H25" />
-                            <path d="M155 25 V10 A5 5 0 0 0 150 5 H135" />
-                            <path d="M5 65 V80 A5 5 0 0 0 10 85 H25" />
-                            <path d="M155 65 V80 A5 5 0 0 1 150 85 H135" />
-                        </g>
-                    </svg>
-                </div>
+                        <VideoOff
+                            :size="80"
+                            class="absolute top-1/2 left-1/2 z-0 -translate-1/2 stroke-gray-400"
+                        />
 
-                <AsyncCameraControl
-                    v-if="stream"
-                    :videoTrack="stream.getVideoTracks()[0]"
-                    class="border-t-transparent"
-                />
+                        <video
+                            v-if="stream"
+                            autoplay
+                            class="relative z-10 w-full border border-gray-200 object-cover object-center"
+                            :srcObject="stream"
+                        ></video>
+                    </div>
+
+                    <AsyncCameraControl
+                        v-if="stream"
+                        :videoTrack="stream.getVideoTracks()[0]"
+                        class="border-t-transparent"
+                    />
+                </div>
             </div>
-        </div>
+        </section>
     </div>
 </template>
 
@@ -91,22 +84,24 @@ import { DecodeHintType } from '@zxing/library'
 import { Video, VideoOff, Scan, X } from 'lucide-vue-next'
 import gsap from 'gsap'
 import BaseSelect from '@/components/form/BaseSelect.vue'
-import BaseAlert from '@/components/BaseAlert.vue'
+import BaseAlert from '@/components/alerts/BaseAlert.vue'
 import TextLoading from '@/components/loading/TextLoading.vue'
-import { AlertStatus } from '@/types/components/alert'
+import { BaseAlertStatus } from '@/types/components/alerts'
 import type { Option } from '@/types/components/forms/select'
 
 const AsyncCameraControl = defineAsyncComponent(
     () => import('@/components/camera/MediaTrackConfiguration.vue'),
 )
 
-const emit = defineEmits(['code'])
+const emit = defineEmits<{
+    (e: 'code', value: string): void
+}>()
 
 const container = useTemplateRef('container')
 
 const alert = ref({ message: '', key: 0 })
 const isHidden = ref<boolean>(true)
-const isOptionsLoading = ref<boolean>(true)
+const isLoadingPermissions = ref<boolean>(true)
 const selectOptions = ref<Array<Option>>([])
 const stream = ref<MediaStream | null>(null)
 let cameras: Array<MediaDeviceInfo> = []
@@ -151,7 +146,7 @@ function open() {
             setCameraOptions()
         })
         .finally(() => {
-            isOptionsLoading.value = false
+            isLoadingPermissions.value = false
         })
 }
 
@@ -248,7 +243,7 @@ async function startStream() {
             controls = await reader.decodeFromStream(data, undefined, (result) => {
                 if (result) {
                     isHidden.value = true
-                    emit('code', result?.getText())
+                    emit('code', result!.getText())
                 }
             })
         })
@@ -264,5 +259,3 @@ async function startStream() {
         })
 }
 </script>
-
-<style scoped></style>

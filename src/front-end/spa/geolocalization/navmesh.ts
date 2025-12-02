@@ -1,8 +1,9 @@
 import { Point, type Edge, type Position, type id } from '@/geolocalization/point'
 
 export interface MeshData {
-    points: Array<{ id: id; position: Position }>
-    edges: Array<{ from: id; to: id; bidirecional: boolean }>
+    id: id
+    pos: [number, number]
+    edges?: Array<id>
 }
 
 export class Navmesh {

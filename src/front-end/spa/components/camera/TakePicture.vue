@@ -1,36 +1,43 @@
 <template>
-    <section v-if="!isHidden">
-        <div class="fixed top-0 left-0 z-90 h-dvh w-full overflow-auto bg-black/80 pb-12">
-            <button type="button" class="ml-auto block">
+    <section
+        v-if="!isHidden"
+        class="fixed top-0 left-0 z-100 h-dvh w-dvw overflow-auto bg-black/80 py-12"
+    >
+        <div class="mx-auto w-11/12 max-w-xl rounded bg-white pb-12">
+            <button type="button" @click="isHidden = true" class="ml-auto block">
                 <X
-                    :size="50"
+                    :size="36"
                     :strokeWidth="2"
-                    @click="isHidden = true"
                     aria-label="Fechar"
-                    class="boder-l ml-auto cursor-pointer stroke-gray-300 p-1 hover:stroke-white"
+                    class="boder-l ml-auto cursor-pointer stroke-gray-400 p-1 hover:stroke-black"
                 />
             </button>
 
-            <BaseAlert
-                v-if="alert.message"
-                :status="AlertStatus.Error"
-                :message="alert.message"
-                :key="alert.key"
-            />
+            <hr class="h-px bg-gray-200" />
 
-            <div class="relative">
-                <CameraViewer @getStream="setStream" />
+            <div class="mx-auto w-11/12 pt-2">
+                <BaseAlert
+                    v-if="alert.message"
+                    :status="BaseAlertStatus.Error"
+                    :message="alert.message"
+                    :key="alert.key"
+                />
 
-                <button
-                    v-if="stream"
-                    @click="takePicture"
-                    type="button"
-                    class="btn btn-blue absolute bottom-6 left-1/2 z-10 -translate-x-1/2"
-                >
-                    Tirar foto
-                </button>
+                <div class="relative">
+                    <CameraViewer @getStream="setStream" />
+
+                    <button
+                        v-if="stream"
+                        @click="takePicture"
+                        type="button"
+                        class="btn btn-blue absolute bottom-6 left-1/2 z-10 -translate-x-1/2"
+                    >
+                        Tirar foto
+                    </button>
+                </div>
+
+                <AsyncTrackConfiguration v-if="stream" :videoTrack="stream.getVideoTracks()[0]" />
             </div>
-            <AsyncTrackConfiguration v-if="stream" :videoTrack="stream.getVideoTracks()[0]" />
         </div>
     </section>
 </template>
@@ -38,9 +45,9 @@
 <script lang="ts" setup>
 import { ref, defineAsyncComponent } from 'vue'
 import { X } from 'lucide-vue-next'
-import BaseAlert from '@/components/BaseAlert.vue'
+import BaseAlert from '@/components/alerts/BaseAlert.vue'
 import CameraViewer from '@/components/camera/CameraViewer.vue'
-import { AlertStatus } from '@/types/components/alert'
+import { BaseAlertStatus } from '@/types/components/alerts'
 
 const AsyncTrackConfiguration = defineAsyncComponent(
     () => import('@/components/camera/MediaTrackConfiguration.vue'),
@@ -70,7 +77,7 @@ function takePicture() {
 
     if (!('ImageCapture' in window)) {
         setAlertMessage(
-            'Não é possível realizar a captura da câmera nesse navegador. Por favor, tente novamente numoutro navegador.',
+            'Não é possível realizar a captura da câmera nesse navegador. Por favor, tente novamente em outro navegador.',
         )
         return
     }

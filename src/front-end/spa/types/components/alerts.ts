@@ -1,4 +1,4 @@
-export enum AlertStatus {
+export enum BaseAlertStatus {
     Info = 'info',
     Error = 'error',
     Warning = 'warning',

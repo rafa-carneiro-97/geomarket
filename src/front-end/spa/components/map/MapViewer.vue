@@ -8,7 +8,7 @@
             class="relative w-full border border-b-0 border-black/20 bg-gray-200"
         >
             <TriangleAlert
-                v-if="!props.data"
+                v-if="!geojson"
                 :size="60"
                 class="absolute top-1/2 left-1/2 -translate-1/2 stroke-gray-500"
             />
@@ -33,56 +33,50 @@ import { TriangleAlert } from 'lucide-vue-next'
 import Leaflet from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Map, MapOptions, GeoJSON, GeoJSONOptions, Layer } from 'leaflet'
-import AlertBox from '@/components/AlertBox.vue'
-import { Navmesh } from '@/geolocalization/navmesh'
-import type { NavmeshDrawer } from '@/geolocalization/drawer'
+import AlertBox from '@/components/alerts/AlertBox.vue'
 
 const props = defineProps({
-    data: {
-        type: String,
-        required: true,
-    },
-    showNavmesh: {
-        type: Boolean,
+    geojsonObject: {
+        type: Object as () => GeoJSON.GeoJsonObject | null,
         required: true,
     },
 })
 
+const emit = defineEmits<{
+    (e: 'map', value: Map | null): void
+}>()
+
 const viewer = useTemplateRef<HTMLDivElement>('viewer')
-let navmesh: Navmesh | null = new Navmesh()
-let navmeshDrawer: NavmeshDrawer | null = null
+const geojson = ref<GeoJSON | null>(null)
+const alertBox = ref({ message: '', key: 0 })
 const OUTER_DISTANCE = 20
 let map: Map | null = null
 
 onBeforeUnmount(() => {
     closeMap()
-    navmesh = null
-    navmeshDrawer = null
 })
 
-onMounted(async () => {
-    try {
-        const parsed = JSON.parse(props.data)
-        processViewerData(parsed.viewer)
-        processNavmeshData(parsed.navmesh)
-    } catch (err) {
-        console.error(err)
-        setAlertBoxMessage('Dados do mapa inválido! Acesse o log para ver mais informações.')
-    }
-
-    if (props.showNavmesh) {
-        const drawer = await getNavmeshDrawer()
-        drawer?.draw()
-    }
+onMounted(() => {
+    if (props.geojsonObject === null) return
+    processGeojsonObject(props.geojsonObject)
 })
 
-const alertBox = ref({ message: '', key: 0 })
-const geojson = ref<GeoJSON | null>(null)
+watch(
+    () => props.geojsonObject,
+    (newValue) => {
+        if (newValue === null) {
+            geojson.value?.remove()
+            geojson.value = null
+            closeMap()
+            return
+        }
+
+        processGeojsonObject(newValue)
+    },
+)
 
 watch(geojson, (newValue) => {
-    if (newValue == null) return
-
-    closeMap()
+    if (newValue === null) return
 
     const bounds = newValue.getBounds()
 
@@ -110,43 +104,8 @@ watch(geojson, (newValue) => {
         maxBounds: expandedGeojsonBounds,
     }
 
-    map = Leaflet.map(viewer.value as HTMLDivElement, options)
-    newValue.addTo(map)
-    map.on('zoomend', () => {
-        updateLayers()
-    })
+    createMap(options)
 })
-
-watch(
-    () => props.showNavmesh,
-    async (newValue, oldValue) => {
-        if (newValue === true || (newValue === false && oldValue === true)) {
-            const drawer = await getNavmeshDrawer()
-            if (newValue === true) {
-                drawer?.draw()
-            } else {
-                drawer?.remove()
-            }
-        }
-    },
-)
-
-async function getNavmeshDrawer(): Promise<NavmeshDrawer | null> {
-    if (navmeshDrawer !== null) {
-        return navmeshDrawer
-    }
-
-    try {
-        const module = await import('@/geolocalization/drawer')
-        const drawer = new module.NavmeshDrawer(map as Map, navmesh as Navmesh)
-        navmeshDrawer = drawer
-    } catch (err) {
-        console.error(err)
-        if (err instanceof Error) setAlertBoxMessage(err.message)
-    } finally {
-        return navmeshDrawer
-    }
-}
 
 function setAlertBoxMessage(msg: string) {
     alertBox.value = {
@@ -155,9 +114,37 @@ function setAlertBoxMessage(msg: string) {
     }
 }
 
-function processViewerData(data: GeoJSON.GeoJsonObject) {
+function createMap(options: MapOptions) {
+    if (geojson.value == null) return
+
+    closeMap()
+
+    map = Leaflet.map(viewer.value as HTMLDivElement, options)
+
+    geojson.value.addTo(map)
+
+    map.on('zoomend', () => {
+        updateLayers()
+    })
+
+    emit('map', map)
+}
+
+function closeMap() {
+    if (map) {
+        map.stop()
+        map.remove()
+        map = null
+
+        emit('map', null)
+    }
+}
+
+function processGeojsonObject(geojsonObj: GeoJSON.GeoJsonObject) {
+    if (geojsonObj === null) return
+
     try {
-        geojson.value = Leaflet.geoJSON(data, {
+        geojson.value = Leaflet.geoJSON(geojsonObj, {
             style: (feature: GeoJSON.Feature) => {
                 return feature.properties?.styles
             },
@@ -168,42 +155,8 @@ function processViewerData(data: GeoJSON.GeoJsonObject) {
     } catch (err) {
         console.error(err)
         setAlertBoxMessage(
-            'Não foi possível processar a visualização do mapa! Acesse o log para ver mais informações.',
+            'Não foi possível processar o mapa! Acesse o log para ver mais informações.',
         )
-    }
-}
-
-function processNavmeshData(
-    data: Array<{ id: string; pos: [number, number]; edges: Array<string> }>,
-) {
-    try {
-        data.forEach((item) => {
-            navmesh?.addPoint(item.id, {
-                lat: item.pos[0],
-                lng: item.pos[1],
-            })
-        })
-
-        data.forEach((item) => {
-            item.edges.forEach((edge) => {
-                navmesh?.addEdge(item.id, edge)
-            })
-        })
-    } catch (err) {
-        console.error(err)
-        setAlertBoxMessage(
-            'Não foi possível processar a área de navegação do mapa! Acesse o log para ver mais informações.',
-        )
-    } finally {
-        console.debug(navmesh?.toString())
-    }
-}
-
-function closeMap() {
-    if (map) {
-        map.stop()
-        map.remove()
-        map = null
     }
 }
 

@@ -20,7 +20,15 @@ urlpatterns = [
         views.DashboardDataView.as_view(),
     ),
     path(
-        "establishment/<int:establishment_id>/product/create",
-        views.EstablishmentProductCreateView.as_view(),
+        "establishment/<int:establishment_id>/gondola/<int:gondola_id>/products/",
+        views.GondolaProductsDataView.as_view(),
+    ),
+    path(
+        "product/<str:barcode>/get",
+        views.ProductsDataView.as_view(),
+    ),
+    path(
+        "product/create",
+        views.ProductsCreateView.as_view(),
     ),
 ]

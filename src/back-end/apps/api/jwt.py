@@ -51,6 +51,7 @@ def authenticate_jwt_header(request: http.HttpRequest) -> User | ValueError:
         )
         raise ValueError("Invalid token")
 
+    logging.debug(f"JWT: authenticated user {payload_user.id} checked")
     return payload_user
 
 

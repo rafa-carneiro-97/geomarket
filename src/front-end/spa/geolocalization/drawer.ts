@@ -27,11 +27,13 @@ export class NavmeshDrawer {
 
     public draw() {
         this.navmesh.getPoints().forEach((point) => {
-            this.drawPoints(point)
-
             point.getEdges().forEach((edge) => {
                 this.drawEdge(edge)
             })
+        })
+
+        this.navmesh.getPoints().forEach((point) => {
+            this.drawPoints(point)
         })
     }
 
@@ -83,6 +85,7 @@ export class NavmeshDrawer {
             weight: 3,
             opacity: 1,
             smoothFactor: 0.1,
+            renderer: Leaflet.svg({ padding: 1000 }), // large padding = no clipping effect
         } as Leaflet.PolylineOptions)
 
         line.bindTooltip(`${edge.cost}`, {
@@ -105,6 +108,7 @@ export class NavmeshDrawer {
             color: 'transparent',
             fillColor: '#000',
             fillOpacity: 1,
+            renderer: Leaflet.svg({ padding: 1000 }), // large padding = no clipping effect
         })
 
         circle.bindTooltip(id, {

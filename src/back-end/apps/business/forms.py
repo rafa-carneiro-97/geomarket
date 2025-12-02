@@ -33,9 +33,9 @@ class EstablishmentGroupAdminForm(forms.ModelForm):
         return cleaned_data
 
 
-class EmployeeAdminForm(forms.ModelForm):
+class EstablishmentEmployeeAdminForm(forms.ModelForm):
     class Meta:
-        model = models.Employee
+        model = models.EstablishmentEmployee
         fields = "__all__"
         widgets = {
             "permissions": FilteredSelectMultiple("Permissões", is_stacked=False),
@@ -55,7 +55,7 @@ class EmployeeAdminForm(forms.ModelForm):
             if is_invalid:
                 raise forms.ValidationError(
                     {
-                        "permissions": "Todos as pemissões do ufncionário devem pertencer à mesma loja do mesmo."
+                        "permissions": "Todos as pemissões do funcionário devem pertencer à mesma loja do mesmo."
                     }
                 )
 
@@ -65,7 +65,7 @@ class EmployeeAdminForm(forms.ModelForm):
             if item.establishment.id != establishment:
                 raise forms.ValidationError(
                     {
-                        "groups": "Todos os grupos do ufncionário devem pertencer à mesma loja do mesmo."
+                        "groups": "Todos os grupos do funcionário devem pertencer à mesma loja do mesmo."
                     }
                 )
 

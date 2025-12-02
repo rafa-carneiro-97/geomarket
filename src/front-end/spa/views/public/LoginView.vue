@@ -11,7 +11,7 @@
 
                     <BaseAlert
                         v-if="alert.message"
-                        :status="AlertStatus.Error"
+                        :status="BaseAlertStatus.Error"
                         :message="alert.message"
                         :key="alert.key"
                         class="mt-4"
@@ -61,7 +61,11 @@
 
                     <div class="flex flex-1 items-center justify-center">
                         <button type="submit" class="btn btn-blue mx-auto mt-4 rounded-full px-6">
-                            <TextLoading text="Acessar" :isLoading="isLoading" />
+                            <TextLoading
+                                text="Acessar"
+                                :isLoading="isLoading"
+                                class="stroke-white"
+                            />
                         </button>
                     </div>
                 </div>
@@ -94,19 +98,33 @@ import { ref, onBeforeMount } from 'vue'
 import { RouterLink } from 'vue-router'
 import router from '@/router'
 import { authStore } from '@/stores/auth'
-import BaseAlert from '@/components/BaseAlert.vue'
+import BaseAlert from '@/components/alerts/BaseAlert.vue'
 import FieldError from '@/components/form/FieldError.vue'
 import TextLoading from '@/components/loading/TextLoading.vue'
-import { AlertStatus } from '@/types/components/alert'
+import { BaseAlertStatus } from '@/types/components/alerts'
 
 onBeforeMount(() => {
     if (auth.token != '') {
-        router.replace({ name: 'establishments' })
+        auth.fetchInfo()
+            .then((userInfo) => {
+                if (userInfo?.isStaff === true) {
+                    window.location.href = '/admin/'
+                } else {
+                    router.replace({ name: 'establishments' })
+                }
+            })
+            .catch((error) => {
+                console.error('Error fetching user info:', error)
+                setAlertMessage(
+                    'Erro ao obter informações do usuário. Por favor, faça login novamente. Caso o problema persista, contacte a nossa equipe.',
+                )
+                auth.logout()
+            })
     }
 })
 
-const email = defineModel<string>('email', { default: 'funcionario@gmail.com', required: true })
-const password = defineModel<string>('password', { default: '1234asdf1', required: true })
+const email = defineModel<string>('email', { default: '', required: true })
+const password = defineModel<string>('password', { default: '', required: true })
 const stayConnected = defineModel<boolean>('stayConnected', { default: false, required: true })
 
 const auth = authStore()
@@ -129,6 +147,7 @@ function setAlertMessage(msg: string) {
 }
 
 function login() {
+    if (isLoading.value) return
     isLoading.value = true
     formErrors.value = {}
     setAlertMessage('')
@@ -139,6 +158,7 @@ function login() {
         stayConnected: stayConnected.value,
     })
         .then(() => {
+            console.debug('login successful')
             location.reload()
         })
         .catch((error) => {

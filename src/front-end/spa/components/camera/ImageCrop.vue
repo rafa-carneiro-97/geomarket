@@ -89,7 +89,7 @@
 
             <BaseAlert
                 v-if="alert.message"
-                :status="AlertStatus.Error"
+                :status="BaseAlertStatus.Error"
                 :message="alert.message"
                 :key="alert.key"
             />
@@ -122,8 +122,8 @@ import { Camera, Trash2, ImageUp, FileImage, X } from 'lucide-vue-next'
 import Cropper from 'cropperjs'
 import 'cropperjs/dist/cropper.min.css'
 import TakePicture from '@/components/camera/TakePicture.vue'
-import BaseAlert from '@/components/BaseAlert.vue'
-import { AlertStatus } from '@/types/components/alert'
+import BaseAlert from '@/components/alerts/BaseAlert.vue'
+import { BaseAlertStatus } from '@/types/components/alerts'
 
 const props = defineProps({
     isRequired: {

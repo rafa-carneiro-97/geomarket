@@ -12,7 +12,7 @@
 
                     <BaseAlert
                         v-if="alert.message"
-                        :status="AlertStatus.Error"
+                        :status="BaseAlertStatus.Error"
                         :message="alert.message"
                         :key="alert.key"
                         class="mt-4"
@@ -166,10 +166,10 @@ import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import axios from 'axios'
 import router from '@/router'
-import BaseAlert from '@/components/BaseAlert.vue'
+import BaseAlert from '@/components/alerts/BaseAlert.vue'
 import FieldError from '@/components/form/FieldError.vue'
 import TextLoading from '@/components/loading/TextLoading.vue'
-import { AlertStatus } from '@/types/components/alert'
+import { BaseAlertStatus } from '@/types/components/alerts'
 
 const firstName = defineModel<string>('firstName', { required: true })
 const lastName = defineModel<string>('lastName', { required: true })

@@ -23,7 +23,7 @@
 
 <script lang="ts" setup>
 import { useTemplateRef, onMounted } from 'vue'
-import MapEditor from '@/components/geojson/MapEditor.vue'
+import MapEditor from '@/components/map/MapEditor.vue'
 
 const props = defineProps({
     name: {

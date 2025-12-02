@@ -31,6 +31,10 @@ class EstablishmentAccessMixin(AccessMixin):
     establishment_id_kwargs = None
 
     def has_permission(self) -> bool:
+        user: users_models.User = self.request.user
+        if user.is_superuser or user.is_staff:
+            return True
+
         employee = self.get_employee_object()
 
         if employee is not None:
@@ -48,12 +52,12 @@ class EstablishmentAccessMixin(AccessMixin):
 
         return establishment_id
 
-    def get_employee_queryset(self) -> QuerySet[business_models.Employee]:
-        return business_models.Employee.objects.select_related(
+    def get_employee_queryset(self) -> QuerySet[business_models.EstablishmentEmployee]:
+        return business_models.EstablishmentEmployee.objects.select_related(
             "establishment",
         ).filter(user=self.request.user, establishment__is_active=True)
 
-    def get_employee_object(self) -> business_models.Employee | None:
+    def get_employee_object(self) -> business_models.EstablishmentEmployee | None:
         user: users_models.User = self.request.user
         establishment_id = self.get_establishment_id()
 

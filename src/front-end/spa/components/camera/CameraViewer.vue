@@ -1,19 +1,19 @@
 <template>
-    <div>
+    <div class="bg-white">
         <BaseAlert
             v-if="alert.message"
-            :status="AlertStatus.Error"
+            :status="BaseAlertStatus.Error"
             :message="alert.message"
             :key="alert.key"
         />
 
         <TextLoading
-            v-if="isOptionsLoading"
-            :isLoading="isOptionsLoading"
-            class="mx-auto mt-10 table text-white"
+            v-if="isLoadingPermissions"
+            :isLoading="isLoadingPermissions"
+            class="mx-auto mt-10 table stroke-blue-600"
         />
 
-        <div v-if="selectOptions.length > 0" class="mx-auto w-11/12 max-w-lg">
+        <template v-if="selectOptions.length > 0">
             <BaseSelect
                 @selectedValue="startStream"
                 label="Câmera"
@@ -24,7 +24,7 @@
             />
 
             <div
-                class="inset-shadow relative mt-3 w-full overflow-hidden border border-black/10 bg-gray-200 inset-shadow-sm inset-shadow-black/10"
+                class="inset-shadow relative mt-3 w-full overflow-hidden rounded-t-lg border border-black/10 bg-gray-200 inset-shadow-sm inset-shadow-black/10"
             >
                 <VideoOff
                     :size="80"
@@ -38,7 +38,7 @@
                     muted
                 ></video>
             </div>
-        </div>
+        </template>
     </div>
 </template>
 
@@ -46,18 +46,18 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { Video, VideoOff } from 'lucide-vue-next'
 import BaseSelect from '@/components/form/BaseSelect.vue'
-import BaseAlert from '@/components/BaseAlert.vue'
+import BaseAlert from '@/components/alerts/BaseAlert.vue'
 import TextLoading from '@/components/loading/TextLoading.vue'
-import { AlertStatus } from '@/types/components/alert'
+import { BaseAlertStatus } from '@/types/components/alerts'
 import type { Option } from '@/types/components/forms/select'
 
 const alert = ref({ message: '', key: 0 })
-const isOptionsLoading = ref<boolean>(true)
+const isLoadingPermissions = ref<boolean>(true)
 const selectOptions = ref<Array<Option>>([])
 const stream = ref<MediaStream | null>(null)
 
 const emit = defineEmits<{
-    (e: 'getStream', payload: MediaStream): void
+    (e: 'getStream', stream: MediaStream): void
 }>()
 
 onMounted(async () => {
@@ -66,7 +66,7 @@ onMounted(async () => {
             setCameraOptions()
         })
         .finally(() => {
-            isOptionsLoading.value = false
+            isLoadingPermissions.value = false
         })
 })
 
@@ -139,9 +139,9 @@ async function startStream(deviceID: string) {
         })
         .then(async (data) => {
             stream.value = data
-            emit('getStream', data)
         })
         .catch((err) => {
+            stream.value = null
             console.error(err)
 
             if (err.name === 'NotReadableError') {
@@ -151,6 +151,8 @@ async function startStream(deviceID: string) {
 
             setAlertMessage(`Erro inesperado, contacte a equipe. Erro: ${err}`)
         })
+
+    emit('getStream', stream.value as MediaStream)
 }
 
 function closeStream() {

@@ -128,10 +128,6 @@ router.beforeEach(async (to) => {
             const emailValidationLink = router.resolve({ name: 'email-validation' }).path
             if (to.path !== emailValidationLink) router.push({ name: 'email-validation' })
         }
-
-        if (auth.userInfo?.isStaff === true) {
-            window.location.href = '/admin/'
-        }
     }
 })
 

@@ -2,7 +2,7 @@
     <div>
         <AlertBox v-if="alertBox.message" :message="alertBox.message" :key="alertBox.key" />
 
-        <MapViewer :data="editorData" :showNavmesh="showNavmesh" :key="editorData" />
+        <MapViewer :geojsonObject="geojsonObject" @map="(v) => (map = v)" />
 
         <div role="setup" class="bg-gray-600">
             <div class="checkbox">
@@ -18,8 +18,8 @@
                 <textarea
                     ref="textarea"
                     spellcheck="false"
-                    @scroll="syncScroll()"
-                    @input="(updateHighlight(), syncScroll())"
+                    @scroll="syncLeftScroll()"
+                    @input="(updateHighlight(), syncLeftScroll())"
                     @keydown="editorActions"
                 ></textarea>
 
@@ -33,7 +33,7 @@
         <button
             role="apply"
             type="button"
-            @click="applyChanges()"
+            @click="updateMapViewer()"
             class="btn btn-green mt-2 ml-auto"
         >
             Aplicar
@@ -42,7 +42,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, useTemplateRef, onMounted } from 'vue'
+import { ref, useTemplateRef, onMounted, onBeforeUnmount, watch } from 'vue'
 import Prism from 'prismjs'
 import 'prismjs/plugins/line-numbers/prism-line-numbers'
 import 'prismjs/plugins/line-highlight/prism-line-highlight'
@@ -54,8 +54,11 @@ import type { Options as PrettierOptions } from 'prettier'
 import { type Plugin } from 'prettier'
 import * as pluginESTree from 'prettier/plugins/estree'
 import * as pluginBabel from 'prettier/plugins/babel'
-import AlertBox from '@/components/AlertBox.vue'
-import MapViewer from '@/components/geojson/MapViewer.vue'
+import type { Map } from 'leaflet'
+import AlertBox from '@/components/alerts/AlertBox.vue'
+import MapViewer from '@/components/map/MapViewer.vue'
+import { MeshData, Navmesh } from '@/geolocalization/navmesh'
+import { NavmeshDrawer } from '@/geolocalization/drawer'
 
 const props = defineProps({
     initialData: {
@@ -73,12 +76,44 @@ const alertBox = ref({ message: '', key: 0 })
 const textarea = useTemplateRef<HTMLTextAreaElement>('textarea')
 const pre = useTemplateRef<HTMLElement>('pre')
 const code = useTemplateRef<HTMLElement>('code')
-const editorData = ref<string>(props.initialData)
+const geojsonObject = ref<GeoJSON.GeoJsonObject | null>(null)
+const map = ref<Map | null>(null)
+let navmesh: Navmesh | null = new Navmesh()
+let navmeshDrawer: NavmeshDrawer | null = null
 
 onMounted(() => {
     const textareaElmt = textarea.value as HTMLTextAreaElement
     textareaElmt.value = props.initialData
+    updateMapViewer()
     prettifyTextarea()
+})
+
+onBeforeUnmount(() => {
+    navmesh = null
+    navmeshDrawer = null
+})
+
+watch(showNavmesh, (newValue) => {
+    if (newValue) {
+        navmeshDrawer?.draw()
+    } else {
+        navmeshDrawer?.remove()
+    }
+})
+
+watch(map, (newValue) => {
+    if (newValue === null) {
+        navmeshDrawer = null
+        return
+    }
+
+    navmeshDrawer = new NavmeshDrawer(newValue as Map, navmesh as Navmesh)
+
+    if (showNavmesh.value) {
+        navmeshDrawer.draw()
+    } else {
+        navmeshDrawer.remove()
+    }
 })
 
 function setAlertBoxMessage(msg: string) {
@@ -118,7 +153,7 @@ function editorActions(event: KeyboardEvent) {
         case 's':
             if (!(event.ctrlKey || event.metaKey)) return
             event.preventDefault()
-            applyChanges()
+            updateMapViewer()
             break
 
         case 'p':
@@ -186,21 +221,60 @@ function updateHighlight() {
     })
 }
 
-function syncScroll() {
+function syncLeftScroll() {
     pre.value!.scrollLeft = textarea.value!.scrollLeft
 }
 
-function applyChanges() {
+function updateMapViewer() {
     const text = textarea.value?.value as string
+    let parsed: object | null = null
+
     try {
-        const parsed = JSON.parse(text)
-        const compressed = JSON.stringify(parsed, null)
-        editorData.value = text
-        emit('compressedData', compressed)
+        parsed = JSON.parse(text)
     } catch (err) {
         console.error(err)
-        setAlertBoxMessage(`Não foi possível aplicar as alterações. Error: ${err}`)
+        setAlertBoxMessage(
+            `Não foi possível aplicar as alterações na visualização do. Acesse o log para ver mais informações.`,
+        )
+        return
     }
+
+    if (parsed === null) return
+    const compressed = JSON.stringify(parsed, null)
+    emit('compressedData', compressed)
+
+    if ('viewer' in parsed) {
+        geojsonObject.value = parsed.viewer as GeoJSON.GeoJsonObject
+    }
+
+    if ('meshData' in parsed) {
+        try {
+            processMeshData(parsed.meshData as Array<MeshData>)
+        } catch (err) {
+            console.error(err)
+            setAlertBoxMessage(
+                'Não foi possível processar a área de navegação do mapa! Acesse o log para ver mais informações.',
+            )
+            return
+        }
+    }
+}
+
+function processMeshData(data: Array<MeshData>) {
+    data.forEach((item) => {
+        navmesh?.addPoint(item.id, {
+            lat: item.pos[0],
+            lng: item.pos[1],
+        })
+    })
+
+    data.forEach((item) => {
+        item.edges?.forEach((edge) => {
+            navmesh?.addEdge(item.id, edge)
+        })
+    })
+
+    console.debug(navmesh?.toString())
 }
 </script>
 
