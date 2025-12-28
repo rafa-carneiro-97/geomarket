@@ -5,10 +5,10 @@ from django.contrib.auth.views import LoginView as AuthLoginView
 from django.core.cache import cache
 from django.template import loader
 from django.views import View
-from django.views.generic.detail import DetailView
-from django.views.generic.edit import CreateView, UpdateView
+from django.views.generic.edit import CreateView
 from apps.users.models import User
 from apps.business import models as business_models
+from apps.sales import models as sales_models
 from .jwt import generate_jwt_token
 from . import forms, mixins
 
@@ -207,7 +207,7 @@ class GondolaProductsDataView(
 
     def get(self, *args, **kwargs) -> http.HttpResponse:
         gondola_products = (
-            business_models.GondolaProduct.objects.select_related("product")
+            sales_models.GondolaProduct.objects.select_related("product")
             .prefetch_related("product__keywords")
             .filter(
                 gondola__id=kwargs.get("gondola_id"),
@@ -309,3 +309,36 @@ class ProductsCreateView(mixins.ValidateJWTHeaderMixin, CreateView):
         barcode = form.cleaned_data.get("barcode", "-")
         logging.info(f'Failed on creating the product "{name} #{barcode}".')
         return http.JsonResponse({"errors": form.errors}, status=400)
+
+
+class EstablishmentMapDataView(View):
+    http_method_names = ["get"]
+
+    def dispatch(self, request, *args, **kwargs):
+        self.establishment_id = kwargs.get("establishment_id")
+        return super().dispatch(request, *args, **kwargs)
+
+    def get(self, *args, **kwargs) -> http.HttpResponse:
+        sales_map = self.queryset()
+
+        if sales_map:
+            data = sales_map.map
+        else:
+            data = {}
+
+        return http.JsonResponse(data=data, safe=False, status=200)
+
+    def queryset(self) -> sales_models.SalesMap | None:
+        key = f"api:establishment-map:establishment-{self.establishment_id}"
+        cached_map = cache.get(key)
+
+        if cached_map is not None:
+            return cached_map
+
+        map = sales_models.SalesMap.objects.filter(
+            establishment=self.establishment_id
+        ).first()
+
+        cache.set(key, map, timeout=600)  # 10 minutes
+
+        return map

@@ -183,14 +183,21 @@ const entries = [
 
     {
         ...defaultOption,
+        entryPoints: ['src\\front-end\\mpa\\map\\main.ts'],
+        outdir: 'src\\back-end\\apps\\sales\\static\\sales\\_js\\map\\bundled\\',
+        publicPath: '/static/sales/_js/map/bundled',
+    },
+
+    {
+        ...defaultOption,
         entryPoints: ['src\\front-end\\mpa\\map_editor\\main.ts'],
-        outdir: 'src\\back-end\\apps\\business\\static\\business\\_js\\widgets\\map_editor\\bundled\\',
+        outdir: 'src\\back-end\\apps\\sales\\static\\sales\\_js\\widgets\\map_editor\\bundled\\',
     },
 
     {
         ...defaultOption,
         entryPoints: ['src\\front-end\\mpa\\gondola_table_editor\\main.ts'],
-        outdir: 'src\\back-end\\apps\\business\\static\\business\\_js\\widgets\\gondola_table_editor\\bundled\\',
+        outdir: 'src\\back-end\\apps\\sales\\static\\sales\\_js\\widgets\\gondola_table_editor\\bundled\\',
     },
 ]
 

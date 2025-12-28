@@ -2,6 +2,7 @@ from django import forms
 from django.contrib.auth import forms as auth_forms
 from apps.business import models as business_models
 from apps.users import models as user_models
+from apps.sales import models as sales_models
 
 
 class CustomAuthenticationForm(auth_forms.AuthenticationForm):
@@ -68,7 +69,7 @@ class CustomUserCreationForm(auth_forms.UserCreationForm):
 
 class GondolaProductCreateForm(forms.ModelForm):
     class Meta:
-        model = business_models.GondolaProduct
+        model = sales_models.GondolaProduct
         fields = "__all__"
 
 

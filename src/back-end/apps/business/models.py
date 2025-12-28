@@ -1,45 +1,12 @@
-import json, os, uuid, hashlib
+import json, os
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.cache import cache
 from apps.core import models as core_models, utils as core_utils
-from . import widgets, validators
 
 
 User = get_user_model()
-
-
-class Company(models.Model):
-    id = models.AutoField(
-        auto_created=True,
-        primary_key=True,
-        verbose_name="ID",
-    )
-
-    CNPJ = models.CharField(
-        verbose_name="CNPJ",
-        max_length=40,
-        blank=False,
-        null=False,
-        unique=True,
-        db_index=True,
-    )
-
-    name = models.CharField(
-        verbose_name="nome comercial",
-        max_length=255,
-        null=False,
-        blank=False,
-    )
-
-    class Meta:
-        managed = True
-        verbose_name = "empresa"
-        verbose_name_plural = "empresas"
-
-    def __str__(self):
-        return f"{self.name}"
 
 
 class ProductKeyword(models.Model):
@@ -116,19 +83,36 @@ models.signals.pre_delete.connect(
 )
 
 
-class CustomGeojsonMap(models.JSONField):
-    def formfield(self, **kwargs):
-        kwargs["widget"] = widgets.GeojsonMapWidget()
-        return super().formfield(**kwargs)
+class Company(models.Model):
+    id = models.AutoField(
+        auto_created=True,
+        primary_key=True,
+        verbose_name="ID",
+    )
 
+    CNPJ = models.CharField(
+        verbose_name="CNPJ",
+        max_length=40,
+        blank=False,
+        null=False,
+        unique=True,
+        db_index=True,
+    )
 
-def _load_default_map():
-    path = os.path.join(os.path.dirname(__file__), "defaults", "map.json")
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return {}
+    name = models.CharField(
+        verbose_name="nome comercial",
+        max_length=255,
+        null=False,
+        blank=False,
+    )
+
+    class Meta:
+        managed = True
+        verbose_name = "empresa"
+        verbose_name_plural = "empresas"
+
+    def __str__(self):
+        return f"{self.name}"
 
 
 class Establishment(models.Model):
@@ -143,13 +127,6 @@ class Establishment(models.Model):
         max_length=256,
         blank=False,
         null=False,
-    )
-
-    map = CustomGeojsonMap(
-        verbose_name="Mapa",
-        blank=False,
-        null=False,
-        default=_load_default_map,
     )
 
     name = models.CharField(
@@ -386,140 +363,3 @@ class EstablishmentEmployee(models.Model):
 
     def delete_perm_cache(self):
         cache.delete(self._get_cache_key())
-
-
-def _load_default_gondola():
-    path = os.path.join(os.path.dirname(__file__), "defaults", "gondola.json")
-    try:
-        with open(path, "r", encoding="utf-8") as fh:
-            return json.load(fh)
-    except Exception:
-        return {}
-
-
-class EstablishmentGondola(models.Model):
-    id = models.AutoField(
-        auto_created=True,
-        primary_key=True,
-        verbose_name="ID",
-    )
-
-    establishment = models.ForeignKey(
-        Establishment,
-        on_delete=models.CASCADE,
-        verbose_name="loja",
-        null=False,
-        blank=False,
-        db_index=True,
-    )
-
-    name = models.CharField(
-        verbose_name="nome",
-        max_length=255,
-        null=False,
-        blank=False,
-        db_index=True,
-    )
-
-    coordinates = models.JSONField(
-        name="coordenadas",
-        null=False,
-        blank=False,
-        validators=[validators.CoordinateListValidator(required_length=4)],
-        default=_load_default_gondola,
-        help_text="Coordenadas do objeto no mapa (polígono)",
-    )
-
-    latitude = models.FloatField(
-        verbose_name="latitude",
-        null=False,
-        blank=False,
-        validators=[validators.PositiveNumberValidator()],
-        help_text="Latitude de referência para busca de produtos no mapa",
-    )
-
-    longitude = models.FloatField(
-        verbose_name="longitude",
-        null=False,
-        blank=False,
-        validators=[validators.PositiveNumberValidator()],
-        help_text="Longitude de referência para busca de produtos no mapa",
-    )
-
-    class Meta:
-        managed = True
-        constraints = [
-            models.UniqueConstraint(
-                fields=["establishment", "name"],
-                name="unique_establishment_gondola",
-            )
-        ]
-        verbose_name = "gôndola"
-        verbose_name_plural = "gôndolas"
-
-    def __str__(self):
-        return f"{self.establishment} - {self.name}"
-
-
-class GondolaProduct(models.Model):
-    id = models.UUIDField(
-        primary_key=True,
-        unique=True,
-        editable=False,
-        verbose_name="UUID",
-        default=uuid.uuid1,
-    )
-
-    gondola = models.ForeignKey(
-        EstablishmentGondola,
-        on_delete=models.CASCADE,
-        verbose_name="gondola",
-        null=False,
-        blank=False,
-        db_index=True,
-    )
-
-    product = models.ForeignKey(
-        Product,
-        on_delete=models.CASCADE,
-        verbose_name="produto",
-        null=False,
-        blank=False,
-        default=uuid.uuid4,
-    )
-
-    gondola_x_position = models.IntegerField(
-        verbose_name="posição na gondola - eixo X",
-        null=False,
-        blank=False,
-        validators=[validators.PositiveNumberValidator()],
-    )
-
-    gondola_y_position = models.IntegerField(
-        verbose_name="posição na gondola - eixo Y",
-        null=False,
-        blank=False,
-        validators=[validators.PositiveNumberValidator()],
-    )
-
-    class Meta:
-        managed = True
-        constraints = [
-            models.UniqueConstraint(
-                fields=["gondola", "gondola_x_position", "gondola_y_position"],
-                name="unique_gondola_product_position",
-            )
-        ]
-        verbose_name = "gôndola → produto"
-        verbose_name_plural = "gôndolas → produtos"
-
-    class EstablishmentPermissions:
-        default = "CRUD"
-
-    def __str__(self):
-        return f"{self.gondola.name}. X: {self.gondola_x_position} - Y: {self.gondola_y_position}]"
-
-    def generate_uuid(self):
-        raw = f"{self.gondola.pk}-{uuid.uuid1()}"
-        hashed = hashlib.sha256(raw.encode()).hexdigest()
-        return uuid.UUID(hashed)

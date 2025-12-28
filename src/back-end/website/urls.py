@@ -3,6 +3,10 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.shortcuts import redirect
 from django.urls import path, include
+import apps.sales.routing
+
+
+websocket_urlpatterns = apps.sales.routing.websocket_urlpatterns
 
 urlpatterns = [
     path("admin/login/", lambda request: redirect(settings.LOGIN_URL)),
@@ -10,6 +14,7 @@ urlpatterns = [
     path("", include("apps.core.urls")),
     path("", include("apps.users.urls")),
     path("", include("apps.business.urls")),
+    path("", include("apps.sales.urls")),
     path("api/", include("apps.api.urls")),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

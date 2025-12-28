@@ -1,5 +1,5 @@
 <template>
-    <div class="map-editor">
+    <div role="map-editor">
         <textarea
             ref="textarea"
             class="hidden"
@@ -13,7 +13,7 @@
 </template>
 
 <style>
-[role='setup'] {
+[role='map-editor'] {
     .aligned label {
         background: red;
         display: flex;

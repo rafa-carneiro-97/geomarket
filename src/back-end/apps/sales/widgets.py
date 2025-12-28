@@ -2,7 +2,7 @@ from django.forms import widgets
 
 
 class GeojsonMapWidget(widgets.Textarea):
-    template_name = "business/widgets/map_editor.html"
+    template_name = "sales/widgets/map_editor.html"
 
     class Media:
         css = {

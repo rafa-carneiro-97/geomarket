@@ -31,4 +31,8 @@ urlpatterns = [
         "product/create",
         views.ProductsCreateView.as_view(),
     ),
+    path(
+        "establishment/<int:establishment_id>/map/",
+        views.EstablishmentMapDataView.as_view(),
+    ),
 ]

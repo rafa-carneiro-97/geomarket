@@ -1,18 +1,27 @@
 <template>
-    <div>
+    <div
+        class="relative"
+        :class="{ 'border border-b-0 border-black/20': !isFullscreen }"
+        :style="{ height: isFullscreen ? '100dvh' : '400px' }"
+    >
         <AlertBox v-if="alertBox.message" :message="alertBox.message" :key="alertBox.key" />
 
+        <LoaderCircle
+            v-if="!geojson && !hasProcessingError"
+            :size="30"
+            :stroke-width="3"
+            class="absolute top-1/2 left-1/2 -translate-1/2 animate-spin stroke-gray-500"
+        />
+
         <div
-            ref="viewer"
-            style="height: 500px"
-            class="relative w-full border border-b-0 border-black/20 bg-gray-200"
+            v-if="hasProcessingError"
+            class="absolute top-1/2 left-1/2 flex -translate-1/2 flex-col flex-wrap items-center justify-center rounded-md bg-white/80 px-4 py-2 text-red-600 shadow-md sm:flex-row sm:gap-3"
         >
-            <TriangleAlert
-                v-if="!geojson"
-                :size="60"
-                class="absolute top-1/2 left-1/2 -translate-1/2 stroke-gray-500"
-            />
+            <TriangleAlert :size="40" />
+            <p class="text-center text-lg font-bold">Erro ao processar o mapa</p>
         </div>
+
+        <div ref="viewer" style="height: 100%"></div>
     </div>
 </template>
 
@@ -29,7 +38,7 @@
 
 <script lang="ts" setup>
 import { ref, useTemplateRef, onMounted, onBeforeUnmount, watch } from 'vue'
-import { TriangleAlert } from 'lucide-vue-next'
+import { LoaderCircle, TriangleAlert } from 'lucide-vue-next'
 import Leaflet from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import type { Map, MapOptions, GeoJSON, GeoJSONOptions, Layer } from 'leaflet'
@@ -40,12 +49,19 @@ const props = defineProps({
         type: Object as () => GeoJSON.GeoJsonObject | null,
         required: true,
     },
+
+    isFullscreen: {
+        type: Boolean,
+        required: false,
+        default: false,
+    },
 })
 
 const emit = defineEmits<{
     (e: 'map', value: Map | null): void
 }>()
 
+const hasProcessingError = ref<boolean>(false)
 const viewer = useTemplateRef<HTMLDivElement>('viewer')
 const geojson = ref<GeoJSON | null>(null)
 const alertBox = ref({ message: '', key: 0 })
@@ -142,7 +158,7 @@ function closeMap() {
 
 function processGeojsonObject(geojsonObj: GeoJSON.GeoJsonObject) {
     if (geojsonObj === null) return
-
+    hasProcessingError.value = false
     try {
         geojson.value = Leaflet.geoJSON(geojsonObj, {
             style: (feature: GeoJSON.Feature) => {
@@ -154,9 +170,8 @@ function processGeojsonObject(geojsonObj: GeoJSON.GeoJsonObject) {
         } as GeoJSONOptions)
     } catch (err) {
         console.error(err)
-        setAlertBoxMessage(
-            'Não foi possível processar o mapa! Acesse o log para ver mais informações.',
-        )
+        setAlertBoxMessage('Não foi possível processar o mapa!')
+        hasProcessingError.value = true
     }
 }
 

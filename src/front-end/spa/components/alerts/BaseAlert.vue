@@ -62,6 +62,10 @@ const props = defineProps({
     },
 })
 
+export interface ResultEventInterface {
+    dataset: Array<string>
+}
+
 const card = useTemplateRef<HTMLElement>('card')
 const isError = computed(() => props.status === BaseAlertStatus.Error)
 const isInfo = computed(() => props.status === BaseAlertStatus.Info)

@@ -153,13 +153,13 @@
                     <button
                         @click="removeRow()"
                         type="button"
-                        class="cursor-pointer rounded-full px-6 opacity-60 transition-all"
+                        class="rounded-full px-6 opacity-60 transition-all"
                         :class="{
                             'cursor-pointer bg-red-700 hover:scale-105 hover:opacity-100': maxY > 0,
                             'cursor-not-allowed bg-gray-500': maxY === 0,
                         }"
                     >
-                        <ChevronUp />
+                        <ChevronUp class="stroke-white" />
                     </button>
 
                     <button
@@ -167,7 +167,7 @@
                         type="button"
                         class="cursor-pointer rounded-full bg-green-600 px-6 opacity-60 transition-all hover:scale-105 hover:opacity-100"
                     >
-                        <ChevronDown />
+                        <ChevronDown class="stroke-white" />
                     </button>
                 </div>
             </div>
@@ -182,7 +182,7 @@
                         'cursor-not-allowed bg-gray-500': maxX === 0,
                     }"
                 >
-                    <ChevronLeft />
+                    <ChevronLeft class="stroke-white" />
                 </button>
 
                 <button
@@ -190,7 +190,7 @@
                     type="button"
                     class="cursor-pointer rounded-full bg-green-600 py-6 opacity-60 transition-all hover:scale-105 hover:opacity-100"
                 >
-                    <ChevronRight />
+                    <ChevronRight class="stroke-white" />
                 </button>
             </div>
         </div>
@@ -232,12 +232,14 @@ const props = defineProps({
     },
 })
 
+export interface ResultEventInterface {
+    dataset: Array<GondolaProductInterface>
+    deleted: Array<GondolaProductInterface>
+}
+
 const emit = defineEmits<{
     (e: 'initialSize', size: number): void
-    (
-        e: 'result',
-        value: { dataset: Array<GondolaProductInterface>; deleted: Array<GondolaProductInterface> },
-    ): void
+    (e: 'result', value: ResultEventInterface): void
 }>()
 
 const AddGondolaProductAsync = defineAsyncComponent(
@@ -271,10 +273,13 @@ const drag = reactive({
 const isHidden = ref<boolean>(false)
 
 onBeforeMount(() => {
+    console.log(`/api/establishment/${establishmentId}/gondola/${props.gondolaId}/products/`)
     axios
         .get(`/api/establishment/${establishmentId}/gondola/${props.gondolaId}/products/`)
         .then((response) => {
             const data = response.data as Array<GondolaProductInterface>
+
+            console.log(response)
 
             emit('initialSize', data.length)
 

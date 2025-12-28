@@ -26,7 +26,7 @@
 
     input[type='password'],
     input[type='text'] {
-        @apply relative z-10 w-full border-b border-gray-300 transition-all duration-300 focus:border-sky-500;
+        @apply relative z-10 w-full border-b border-gray-300 transition-all duration-300 outline-none focus:border-sky-500;
     }
 
     input[type='range'] {

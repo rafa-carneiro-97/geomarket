@@ -1,8 +1,10 @@
-import re
+import uuid
+from PIL import Image
+from django.apps import apps
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.fields.files import ImageFieldFile
-from django.core.exceptions import ValidationError
-from PIL import Image
+from django.utils.deconstruct import deconstructible
 from . import widgets, utils
 
 
@@ -97,3 +99,27 @@ class CustomImageField(models.ImageField):
             }
         )
         return super().formfield(**kwargs)
+
+
+@deconstructible
+class UniqueUUIDGenerator:
+    def __init__(
+        self, app_label: str, model_label: str, field: str, uuid_func=uuid.uuid1
+    ):
+        self.app_label = app_label
+        self.model_label = model_label
+        self.field = field
+        self.uuid_func = uuid_func
+
+    def __call__(self):
+        model = apps.get_model(self.app_label, self.model_label)
+        identifier = self.uuid_func()
+
+        # Ensure uniqueness
+        while model.objects.filter(**{self.field: identifier}).exists():
+            identifier = self.uuid_func()
+
+        return identifier
+
+    def __eq__(self, other):
+        return self.model_label == other.model_label

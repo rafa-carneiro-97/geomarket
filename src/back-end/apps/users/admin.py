@@ -18,7 +18,8 @@ class CustomPermissionAdmin(admin.ModelAdmin):
 
 @admin.register(models.User)
 class UserAdmin(auth_admin.UserAdmin):
-    form = forms.UserAdminForm
+    form = forms.UserAdminChangeForm
+    add_form = forms.UserAdminCreationForm
     list_display = (
         "id",
         "email",
@@ -37,7 +38,7 @@ class UserAdmin(auth_admin.UserAdmin):
     )
     list_filter = ("email", "created_at")
     search_fields = ("email",)
-    readonly_fields = ("id", "is_superuser", "last_login")
+    readonly_fields = ("id", "is_superuser", "last_login", "created_at")
     add_fieldsets = (
         (
             "Identificação",

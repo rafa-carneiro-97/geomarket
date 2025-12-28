@@ -4,23 +4,23 @@
 
         <MapViewer :geojsonObject="geojsonObject" @map="(v) => (map = v)" />
 
-        <div role="setup" class="bg-gray-600">
+        <div class="bg-gray-600">
             <div class="checkbox">
-                <label class="flex items-center justify-center hover:bg-transparent">
-                    <input type="checkbox" v-model="showNavmesh" />
-                    Mostrar navegação
+                <label class="flex flex-row flex-nowrap items-center hover:bg-white/10">
+                    <input type="checkbox" v-model="showNavmesh" style="margin: 3px 6px" />
+                    <span class="text-nowrap text-white">Ver navegação</span>
                 </label>
             </div>
         </div>
 
-        <div style="max-height: 400px; overflow-y: auto">
+        <div style="max-height: 720px; overflow-y: auto">
             <div role="editor" class="relative">
                 <textarea
                     ref="textarea"
                     spellcheck="false"
                     @scroll="syncLeftScroll()"
                     @input="(updateHighlight(), syncLeftScroll())"
-                    @keydown="editorActions"
+                    @keydown="editorActions($event)"
                 ></textarea>
 
                 <pre
@@ -71,7 +71,7 @@ const emit = defineEmits<{
     (e: 'compressedData', payload: string): void
 }>()
 
-const showNavmesh = ref<boolean>(true)
+const showNavmesh = ref<boolean>(false)
 const alertBox = ref({ message: '', key: 0 })
 const textarea = useTemplateRef<HTMLTextAreaElement>('textarea')
 const pre = useTemplateRef<HTMLElement>('pre')
@@ -234,7 +234,7 @@ function updateMapViewer() {
     } catch (err) {
         console.error(err)
         setAlertBoxMessage(
-            `Não foi possível aplicar as alterações na visualização do. Acesse o log para ver mais informações.`,
+            `Não foi possível renderizar o mapa. Acesse o log para ver mais informações.`,
         )
         return
     }
@@ -294,7 +294,7 @@ div[role='editor'] {
     &:deep(textarea),
     &:deep(pre) {
         padding: 0 0 12px 58px;
-        min-height: 280px;
+        min-height: 320px;
     }
 
     &:deep(textarea) {

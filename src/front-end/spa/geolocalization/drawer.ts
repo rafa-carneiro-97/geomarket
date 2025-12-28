@@ -23,6 +23,8 @@ export class NavmeshDrawer {
 
         this.map.createPane('edge-cost')
         this.map.getPane('edge-cost')!.style.zIndex = '1003'
+
+        this.map.getPane('popupPane')!.style.zIndex = '1010'
     }
 
     public draw() {

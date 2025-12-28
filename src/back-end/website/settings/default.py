@@ -1,8 +1,9 @@
-import os, sys
+import os
 from pathlib import Path
 from email.utils import getaddresses
 from django.urls import reverse_lazy
 from dotenv import load_dotenv
+from .logging import *
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -23,6 +24,7 @@ CSRF_TRUSTED_ORIGINS = os.environ["DJANGO_CSRF_TRUSTED_ORIGINS"].split(",")
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -30,10 +32,12 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
+    "channels",
     # APPS
     "apps.core",
     "apps.users",
     "apps.business",
+    "apps.sales",
     "apps.api",
     "apps.spa",
 ]
@@ -68,7 +72,16 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "website.wsgi.application"
+
+ASGI_APPLICATION = "website.asgi.application"
+
+
+# Websocket
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    },
+}
 
 
 # Database
@@ -167,51 +180,3 @@ EMAIL_SUPPORT = os.environ["EMAIL_SUPPORT"]
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 # A list of all the administrators who get code error notifications.
 ADMINS = getaddresses([os.environ.get("DJANGO_ADMINS", default=None)])
-
-
-# Logging
-LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "filters": {
-        # It only works in production and stage
-        "require_debug_false": {
-            "()": "django.utils.log.RequireDebugFalse",
-        },
-        "require_debug_true": {
-            "()": "django.utils.log.RequireDebugTrue",
-        },
-    },
-    "formatters": {
-        "simple": {
-            "format": "[{asctime}] [{levelname}: {name}] - {message}",
-            "datefmt": "%d/%B/%Y %H:%M:%S",
-            "style": "{",
-        }
-    },
-    "handlers": {
-        "mail_admins": {
-            "level": "ERROR",
-            "filters": ["require_debug_false"],
-            "class": "django.utils.log.AdminEmailHandler",
-            "include_html": True,
-        },
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "simple",
-            "stream": sys.stderr,
-        },
-    },
-    "loggers": {
-        "root": {
-            "handlers": ["mail_admins"],
-            "level": "ERROR",
-            "propagate": True,
-        },
-        "": {
-            "handlers": ["console"],
-            "level": os.environ.get("DJANGO_LOG_LEVEL", "INFO"),
-            "propagate": True,
-        },
-    },
-}
