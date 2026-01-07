@@ -273,13 +273,10 @@ const drag = reactive({
 const isHidden = ref<boolean>(false)
 
 onBeforeMount(() => {
-    console.log(`/api/establishment/${establishmentId}/gondola/${props.gondolaId}/products/`)
     axios
         .get(`/api/establishment/${establishmentId}/gondola/${props.gondolaId}/products/`)
         .then((response) => {
             const data = response.data as Array<GondolaProductInterface>
-
-            console.log(response)
 
             emit('initialSize', data.length)
 

@@ -1,0 +1,31 @@
+{% extends "admin/change_form.html" %}
+
+
+{% block submit_buttons_bottom %}
+
+    {% if original %}
+
+        <div class="submit-row">
+            <a
+                href="{% url 'sales:map' establishment_id=original.information_emissor.establishment.id  locator_id=original.id %}"
+                target="_blank"
+                class="button"
+                style="padding: 8px 16px; background: oklch(59.6% 0.145 163.225);"
+            >
+                Visualizar no mapa
+            </a>
+
+            <a
+                href="{% url 'sales:map-info' establishment_id=original.information_emissor.establishment.id  locator_id=original.id %}"
+                target="_blank"
+                class="button"
+                style="padding: 8px 16px; background: oklch(39.8% 0.195 277.366)"
+            >
+                Informações da conexão
+            </a>
+        </div>
+    {% endif %}
+
+
+    {{ block.super }}
+{% endblock %}

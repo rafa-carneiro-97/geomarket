@@ -2,7 +2,6 @@ from django import http
 from django.core.cache import cache
 from django.core.exceptions import ImproperlyConfigured, ObjectDoesNotExist
 from django.contrib.auth.mixins import LoginRequiredMixin, AccessMixin
-from django.db.models import QuerySet
 from .jwt import authenticate_jwt_header
 from apps.users import models as users_models
 from apps.business import models as business_models
@@ -30,17 +29,21 @@ class EstablishmentAccessMixin(AccessMixin):
     raise_exception = False
     establishment_id_kwargs = None
 
+    def dispatch(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return self.handle_no_permission()
+
+        if not self.has_permission():
+            return self.handle_no_permission()
+
+        return super().dispatch(request, *args, **kwargs)
+
     def has_permission(self) -> bool:
-        user: users_models.User = self.request.user
-        if user.is_superuser or user.is_staff:
-            return True
-
         employee = self.get_employee_object()
-
         if employee is not None:
             return True
 
-        return True
+        return False
 
     def get_establishment_id(self) -> int:
         establishment_id = self.kwargs.get(self.establishment_id_kwargs)
@@ -52,12 +55,12 @@ class EstablishmentAccessMixin(AccessMixin):
 
         return establishment_id
 
-    def get_employee_queryset(self) -> QuerySet[business_models.EstablishmentEmployee]:
+    def get_employee_queryset(self) -> business_models.EstablishmentEmployee:
         return business_models.EstablishmentEmployee.objects.select_related(
             "establishment",
         ).filter(user=self.request.user, establishment__is_active=True)
 
-    def get_employee_object(self) -> business_models.EstablishmentEmployee | None:
+    def get_employee_object(self) -> business_models.EstablishmentEmployee:
         user: users_models.User = self.request.user
         establishment_id = self.get_establishment_id()
 
@@ -67,18 +70,34 @@ class EstablishmentAccessMixin(AccessMixin):
         if establishment is not None:
             return establishment
 
+        if user.is_staff:
+            return self._generate_temporary_employee(user)
+
         try:
             obj = self.get_employee_queryset().get(establishment__id=establishment_id)
             cache.set(cache_key, obj, timeout=10 * 60)  # 10 minutes
             return obj
         except ObjectDoesNotExist:
-            raise http.Http404("Employee does not exist.")
+            raise http.Http404("Employee not found.")
 
-    def dispatch(self, request, *args, **kwargs):
-        if not request.user.is_authenticated:
-            return self.handle_no_permission()
+    def _generate_temporary_employee(
+        self, user: users_models.User
+    ) -> business_models.EstablishmentEmployee | None:
+        if not user.is_staff:
+            raise Exception(
+                "Can not create a temporary employee for user who are not staff."
+            )
 
-        if not self.has_permission():
-            return self.handle_no_permission()
+        establishment = business_models.Establishment.objects.filter(
+            id=self.get_establishment_id()
+        ).first()
 
-        return super().dispatch(request, *args, **kwargs)
+        if not establishment:
+            raise http.Http404("Establishment not found.")
+
+        temporary_employee = business_models.EstablishmentEmployee()
+        temporary_employee.user = user
+        temporary_employee.is_admin = True
+        temporary_employee.establishment = establishment
+
+        return temporary_employee

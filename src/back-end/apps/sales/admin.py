@@ -123,4 +123,7 @@ class InformationEmissorAdmin(admin.ModelAdmin):
 
 @admin.register(models.CartLocator)
 class CartLocatorAdmin(admin.ModelAdmin):
-    pass
+    change_form_template = "sales/admin/cart_locator/change_form.html"
+    list_display = ("id", "name", "information_emissor")
+    search_fields = ("id", "name", "information_emissor")
+    ordering = ("information_emissor", "name")

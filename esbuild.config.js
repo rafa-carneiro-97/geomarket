@@ -183,15 +183,22 @@ const entries = [
 
     {
         ...defaultOption,
-        entryPoints: ['src\\front-end\\mpa\\map\\main.ts'],
+        entryPoints: ['src\\front-end\\mpa\\map\\viewer\\main.ts'],
         outdir: 'src\\back-end\\apps\\sales\\static\\sales\\_js\\map\\bundled\\',
         publicPath: '/static/sales/_js/map/bundled',
     },
 
     {
         ...defaultOption,
-        entryPoints: ['src\\front-end\\mpa\\map_editor\\main.ts'],
+        entryPoints: ['src\\front-end\\mpa\\map\\editor\\main.ts'],
         outdir: 'src\\back-end\\apps\\sales\\static\\sales\\_js\\widgets\\map_editor\\bundled\\',
+    },
+
+    {
+        ...defaultOption,
+        entryPoints: ['src\\front-end\\mpa\\map\\info\\main.ts'],
+        outdir: 'src\\back-end\\apps\\sales\\static\\sales\\_js\\map_info\\bundled\\',
+        publicPath: '/static/sales/_js/map_info/bundled',
     },
 
     {

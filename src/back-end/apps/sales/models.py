@@ -89,15 +89,6 @@ class Gondola(models.Model):
         db_index=True,
     )
 
-    coordinates = models.JSONField(
-        name="coordenadas",
-        null=False,
-        blank=False,
-        validators=[validators.CoordinateListValidator(required_length=4)],
-        default=_load_default_gondola,
-        help_text="Coordenadas do objeto no mapa (polígono)",
-    )
-
     latitude = models.FloatField(
         verbose_name="latitude",
         null=False,

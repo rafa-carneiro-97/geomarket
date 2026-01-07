@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block extra_head %}
+    <link
+        rel="stylesheet"
+        type="text/css"
+        href="{% static 'sales/_js/map/bundled/main.min.css' %}"
+    />
+{% endblock extra_head %}
+
+{% block content %}
+    {% csrf_token %}
+    <div
+        id="info"
+        data-locator-id="{{ locator_id }}"
+        data-establishment-id="{{ establishment_id }}"
+    ></div>
+
+    <script
+        type="module"
+        src="{% static 'sales/_js/map_info/bundled/main.min.js' %}"
+    ></script>
+
+{% endblock content %}

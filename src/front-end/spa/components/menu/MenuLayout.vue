@@ -49,7 +49,7 @@
                 class="hidden flex-1 flex-col items-center justify-center overflow-hidden p-2 sm:flex"
             >
                 <img src="@/assets/logo.svg" alt="Logo" class="w-56 min-w-56" />
-                <h3 class="text-center text-4xl font-bold text-white">Geomarket</h3>
+                <h3 class="text-center text-4xl font-bold text-white">Encontrema</h3>
             </div>
 
             <div
@@ -64,7 +64,7 @@
 
                 <div class="mx-auto mt-12 table p-2 sm:hidden">
                     <img src="@/assets/logo.svg" alt="Logo" class="w-40 min-w-40" />
-                    <h3 class="text-center text-2xl font-bold text-white">Geomarket</h3>
+                    <h3 class="text-center text-2xl font-bold text-white">Encontrema</h3>
                 </div>
             </div>
         </div>
